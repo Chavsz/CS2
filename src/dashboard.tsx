@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import Total from './components/total'
 import SelectData, { type DatasetKey } from './components/selectData'
 import Age from './components/Age'
 import AllCountries from './components/AllCountries'
@@ -11,7 +10,7 @@ import Education from './components/Education'
 import PlaceOfOrigin from './components/PlaceOfOrigin'
 
 const Dashboard = () => {
-  const [selected, setSelected] = useState<DatasetKey>('Total')
+  const [selected, setSelected] = useState<DatasetKey>('Age')
 
   return (
     <div>
@@ -20,7 +19,6 @@ const Dashboard = () => {
 
       {/* Render selected dataset component */}
       <div className="mt-4">
-        {selected === 'Total' && <Total />}
         {selected === 'Age' && <Age />}
         {selected === 'AllCountries' && <AllCountries />}
         {selected === 'MajorCountries' && <MajorCountries />}

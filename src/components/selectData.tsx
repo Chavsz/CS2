@@ -1,7 +1,6 @@
 export type DatasetKey =
-  | 'Total'
   | 'Age'
-  | 'AllCountries'
+  | 'AllCountries'  
   | 'MajorCountries'
   | 'Occupation'
   | 'Sex'
@@ -10,7 +9,6 @@ export type DatasetKey =
   | 'PlaceOfOrigin'
 
 export const datasetOptions: { value: DatasetKey; label: string }[] = [
-  { value: 'Total', label: 'Total' },
   { value: 'Age', label: 'Age' },
   { value: 'AllCountries', label: 'All Countries' },
   { value: 'MajorCountries', label: 'Major Countries' },
