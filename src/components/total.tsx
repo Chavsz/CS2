@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { addEmigrant, getEmigrants, updateEmigrant, deleteEmigrant } from './services/emigrantsService';
+import { addEmigrant, getEmigrants, updateEmigrant, deleteEmigrant } from '../services/emigrantsService';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, CartesianGrid, ResponsiveContainer } from 'recharts';
 
 type Emigrant = {
