@@ -40,3 +40,11 @@ export const deleteMajorCountries = async (id: string) => {
   const docRef = doc(db, "majorCountries", id);
   await deleteDoc(docRef);
 };
+
+// DELETE ALL
+export const deleteAllMajorCountries = async () => {
+  const snapshot = await getDocs(majorCountriesCollection);
+  snapshot.docs.forEach(async (doc) => {
+    await deleteDoc(doc.ref);
+  });
+};

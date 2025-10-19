@@ -30,3 +30,10 @@ export const deleteSex = async (id: string) => {
   await deleteDoc(ref)
 }
 
+export const deleteAllSex = async () => {
+  const snapshot = await getDocs(sexCollection)
+  snapshot.docs.forEach(async (doc) => {
+    await deleteDoc(doc.ref)
+  })
+}
+

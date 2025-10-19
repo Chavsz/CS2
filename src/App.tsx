@@ -1,7 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import Sidebar from "./sidebar";
 import Dashboard from "./dashboard";
-import AddRecords from "./addRecords";
+import AddRecordsCSV from "./addRecordsCSV"
 import Login from "./auth/login";
 import Register from "./auth/register";
 import { useAuth } from "./contexts/authContexts/auth";
@@ -18,7 +18,7 @@ const App = () => {
       <div className="p-4">
         <Routes>
           <Route path="/" element={userLoggedIn ? <Dashboard /> : <Login />} />
-          <Route path="/addRecords" element={userLoggedIn ? <AddRecords /> : <Login />} />
+          <Route path="/addRecordsCSV" element={userLoggedIn ? <AddRecordsCSV /> : <Login />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
         </Routes>

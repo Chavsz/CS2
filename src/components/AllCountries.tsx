@@ -112,7 +112,6 @@ const AllCountries = () => {
           }}
         />)}
       </div>
-      <p className="text-sm text-gray-500 mt-2">Enter ISO3 codes per year; the map aggregates totals across all years in your dataset.</p>
     </div>
   )
 }

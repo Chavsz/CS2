@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { addPlaceOfOrigin, getPlaceOfOrigin, updatePlaceOfOrigin, deletePlaceOfOrigin, type PlaceOfOriginData } from '../services/placeOfOrigin';
+import { addPlaceOfOrigin, getPlaceOfOrigin, updatePlaceOfOrigin, deletePlaceOfOrigin, type PlaceOfOriginData, deleteAllPlaceOfOrigin } from '../services/placeOfOrigin';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts';
 
 function PlaceOfOrigin() {
@@ -8,6 +8,8 @@ function PlaceOfOrigin() {
   const [filterType, setFilterType] = useState<'year' | 'total'>('total');
   const [selectedYear, setSelectedYear] = useState<string>('');
   const [showModal, setShowModal] = useState(false);
+  const [deleting, setDeleting] = useState(false)
+  const [deleted, setDeleted] = useState(false)
   const [form, setForm] = useState({
     year: "",
     regionI: "",
@@ -181,6 +183,18 @@ function PlaceOfOrigin() {
     { region: "Not Reported", count: totals.notReported },
   ];
 
+  const onDeleteAll = async () => {
+    setDeleting(true)
+    try {
+      alert('Deleting all place of origin data...')
+      await deleteAllPlaceOfOrigin()
+      await fetchData();
+      setDeleted(true)
+    } finally {
+      setDeleting(false)
+      setDeleted(false)
+    }
+  }
   return (
     <div className="p-5">
       {/* Filter Controls */}
@@ -231,6 +245,13 @@ function PlaceOfOrigin() {
               className="px-4 py-2 bg-green-500 text-white border-none rounded cursor-pointer"
             >
               Add Record
+            </button>
+            <button 
+              onClick={onDeleteAll}
+              disabled={deleting}
+              className="px-4 py-2 bg-red-500 text-white border-none rounded cursor-pointer disabled:opacity-60"
+            >
+              {deleting ? 'Deleting...' : 'Delete All'}
             </button>
           </div>
         </div>

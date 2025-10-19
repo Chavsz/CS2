@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { addMajorCountries, getMajorCountries, updateMajorCountries, deleteMajorCountries } from '../services/majorCountries';
+import { addMajorCountries, getMajorCountries, updateMajorCountries, deleteMajorCountries, deleteAllMajorCountries } from '../services/majorCountries';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, CartesianGrid, ResponsiveContainer } from 'recharts';
 
 type MajorCountries = {
@@ -24,6 +24,7 @@ function MajorCountries() {
   const [filterType, setFilterType] = useState<'year' | 'total'>('total');
   const [selectedYear, setSelectedYear] = useState<string>('');
   const [showModal, setShowModal] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [form, setForm] = useState({
     year: "",
     Usa: "",
@@ -130,6 +131,13 @@ function MajorCountries() {
     { category: "Others", count: totals.Others },
   ];
 
+  const onDeleteAll = async () => {
+    setDeleting(true);
+    await deleteAllMajorCountries();
+    await fetchData();
+    setDeleting(false);
+  };
+
   return (
     <div className="p-5">
       {/* Header */}
@@ -138,11 +146,6 @@ function MajorCountries() {
       <div className="flex justify-between items-center mb-5">
 
         <div className="flex items-center gap-5">
-          <div className="flex items-center gap-2">
-            <span className="font-bold">Year</span>
-            <span className="text-gray-400">|</span>
-            <span className="font-bold">Total</span>
-          </div>
           <div className="flex items-center gap-2">
             <div>
               <button 
@@ -183,6 +186,14 @@ function MajorCountries() {
               className="px-4 py-2 bg-green-500 text-white border-none rounded cursor-pointer"
             >
               Add Record
+            </button>
+            {/* Delete All Records */}
+            <button
+              onClick={onDeleteAll}
+              disabled={deleting}
+              className="px-4 py-2 bg-red-500 text-white border-none rounded cursor-pointer disabled:opacity-60"
+            >
+              {deleting ? 'Deleting...' : 'Delete All Records'}
             </button>
           </div>
         </div>

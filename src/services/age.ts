@@ -29,4 +29,11 @@ export const deleteAge = async (id: string) => {
   await deleteDoc(ref)
 }
 
+export const deleteAllAges = async () => {
+  const snapshot = await getDocs(ageCollection)
+  snapshot.docs.forEach(async (doc) => {
+    await deleteDoc(doc.ref)
+  })
+}
+
 

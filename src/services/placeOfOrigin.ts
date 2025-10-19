@@ -69,3 +69,10 @@ export const deletePlaceOfOrigin = async (id: string) => {
   }
 };
 
+export const deleteAllPlaceOfOrigin = async () => {
+  const snapshot = await getDocs(collection(db, COLLECTION_NAME));
+  snapshot.docs.forEach(async (doc) => {
+    await deleteDoc(doc.ref);
+  });
+};
+

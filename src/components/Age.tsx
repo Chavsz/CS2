@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react'
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts'
-import { getAges, addAge, type AgeRecord } from '../services/age'
+import { getAges, addAge, type AgeRecord, deleteAllAges } from '../services/age'
 
 const Age = () => {
   const [data, setData] = useState<AgeRecord[]>([])
   const [yearInput, setYearInput] = useState('')
   const [totalInput, setTotalInput] = useState('')
   const [saving, setSaving] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [deleted, setDeleted] = useState(false)
 
   useEffect(() => {
     (async () => {
@@ -39,6 +41,17 @@ const Age = () => {
     }
   }
 
+  const onDeleteAll = async () => {
+    setDeleting(true)
+    try {
+      alert('Deleting all ages...')
+      await deleteAllAges()
+      await reload()
+      setDeleted(true)
+    } finally {
+      setDeleting(false)
+    }
+  }
   return (
     <div className="w-full">
       <h2 className="text-xl font-semibold text-gray-600 mb-3">Age: Total Emigrants by Year</h2>
@@ -70,6 +83,15 @@ const Age = () => {
           className="bg-blue-600 text-white rounded-md px-4 py-2 disabled:opacity-60"
         >
           {saving ? 'Saving...' : 'Add'}
+        </button>
+        {/* Delete All button */}
+        <button
+          type="button"
+          disabled={deleting}
+          onClick={onDeleteAll}
+          className="bg-red-600 text-white rounded-md px-4 py-2"
+        >
+          {deleting ? 'Deleting...' : 'Delete All'}
         </button>
       </form>
 

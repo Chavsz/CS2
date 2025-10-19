@@ -23,10 +23,10 @@ const RouteSelect = () => {
         handleSelect={handleSelect}
       />
       <Route
-        to="/addRecords"
+        to="/addRecordsCSV"
         selected={selected}
         Icon={mdIcons.MdCalendarMonth}
-        title="Add Records"
+        title="Add Records CSV"
         handleSelect={handleSelect}
       />
     </div>
