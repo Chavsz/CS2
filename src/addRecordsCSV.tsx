@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { addAge, deleteAllAges, type AgeRecord } from './services/age'
 import { addMajorCountries, deleteAllMajorCountries } from './services/majorCountries'
 import { addSex, deleteAllSex, type SexRecord } from './services/sex'
+import { addPlaceOfOrigin, deleteAllPlaceOfOrigin, type PlaceOfOriginData } from './services/placeOfOrigin'
 
 const AddRecordsCSV = () => {
   const [uploading, setUploading] = useState(false)
@@ -10,6 +11,8 @@ const AddRecordsCSV = () => {
   const [majorCountriesStatus, setMajorCountriesStatus] = useState('')
   const [sexUploading, setSexUploading] = useState(false)
   const [sexStatus, setSexStatus] = useState('')
+  const [placeOfOriginUploading, setPlaceOfOriginUploading] = useState(false)
+  const [placeOfOriginStatus, setPlaceOfOriginStatus] = useState('')
 
   const parseAgeCSV = (csvText: string): AgeRecord[] => {
     const lines = csvText.split('\n')
@@ -31,7 +34,6 @@ const AddRecordsCSV = () => {
       }
     }
     
-    console.log('Parsed data:', data.slice(0, 5)) // Show first 5 records
     return data
   }
 
@@ -69,7 +71,6 @@ const AddRecordsCSV = () => {
       }
     }
     
-    console.log('Parsed major countries data:', data.slice(0, 3)) // Show first 3 records
     return data
   }
 
@@ -94,7 +95,93 @@ const AddRecordsCSV = () => {
       }
     }
     
-    console.log('Parsed sex data:', data.slice(0, 5)) // Show first 5 records
+    return data
+  }
+
+  const parsePlaceOfOriginCSV = (csvText: string): PlaceOfOriginData[] => {
+    const lines = csvText.split('\n')
+    const data: PlaceOfOriginData[] = []
+    
+    // Skip header row (first line)
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i].trim()
+      
+      if (line === '' || line.includes('TOTAL')) {
+        continue // Skip empty lines and summary rows
+      }
+      
+      const columns = line.split(',')
+      
+      if (columns.length >= 35) { // REGION + 33 years + TOTAL + %
+        const region = columns[0].trim()
+        
+        // Map region names to the service field names
+        const regionMapping: { [key: string]: string } = {
+          'RegionI-IlocosRegion': 'regionI',
+          'RegionII-CagayanValley': 'regionII',
+          'RegionIII-CentralLuzon': 'regionIII',
+          'RegionIVA-CALABARZON': 'regionIVA',
+          'RegionIVB-MIMAROPA': 'regionIVB',
+          'RegionV-BicolRegion': 'regionV',
+          'RegionVI-WesternVisayas': 'regionVI',
+          'RegionVII-CentralVisayas': 'regionVII',
+          'RegionVIII-EasternVisayas': 'regionVIII',
+          'RegionIX-ZamboangaPeninsula': 'regionIX',
+          'RegionX-NorthernMindanao': 'regionX',
+          'RegionXI-DavaoRegion': 'regionXI',
+          'RegionXII-SOCCSKSARGEN': 'regionXII',
+          'RegionXIII-Caraga': 'regionXIII',
+          'AutonomousRegioninMuslimMindanao(ARMM)': 'armm',
+          'CordilleraAdministrativeRegion(CAR)': 'car',
+          'NationalCapitalRegion(NCR)': 'ncr',
+          'NotReported/NoResponse': 'notReported'
+        }
+        
+        const fieldName = regionMapping[region]
+        if (fieldName) {
+          // Extract data for each year from 1988 to 2020
+          for (let year = 1988; year <= 2020; year++) {
+            const columnIndex = year - 1988 + 1 // +1 because first column is REGION
+            if (columnIndex < columns.length) {
+              const value = parseInt(columns[columnIndex].trim() || '0', 10)
+              
+              if (!isNaN(value) && value > 0) {
+                // Find existing record for this year or create new one
+                let existingRecord = data.find(d => d.year === year)
+                if (!existingRecord) {
+                  existingRecord = {
+                    year,
+                    regionI: 0,
+                    regionII: 0,
+                    regionIII: 0,
+                    regionIVA: 0,
+                    regionIVB: 0,
+                    regionV: 0,
+                    regionVI: 0,
+                    regionVII: 0,
+                    regionVIII: 0,
+                    regionIX: 0,
+                    regionX: 0,
+                    regionXI: 0,
+                    regionXII: 0,
+                    regionXIII: 0,
+                    armm: 0,
+                    car: 0,
+                    ncr: 0,
+                    notReported: 0
+                  }
+                  data.push(existingRecord)
+                }
+                
+                // Set the value for the specific region
+                ;(existingRecord as any)[fieldName] = value
+              }
+            }
+          }
+        }
+      }
+    }
+    
     return data
   }
 
@@ -206,6 +293,42 @@ const AddRecordsCSV = () => {
     }
   }
 
+  const handlePlaceOfOriginCSVUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    setPlaceOfOriginUploading(true)
+    setPlaceOfOriginStatus('Processing CSV file...')
+
+    try {
+      const text = await file.text()
+      const placeOfOriginData = parsePlaceOfOriginCSV(text)
+      
+      if (placeOfOriginData.length === 0) {
+        setPlaceOfOriginStatus('No valid data found in CSV file')
+        return
+      }
+
+      setPlaceOfOriginStatus(`Found ${placeOfOriginData.length} records. Uploading to database...`)
+      
+      // Clear existing data first
+      await deleteAllPlaceOfOrigin()
+      
+      // Add new data
+      for (const record of placeOfOriginData) {
+        await addPlaceOfOrigin(record)
+      }
+      
+      setPlaceOfOriginStatus(`Successfully uploaded ${placeOfOriginData.length} place of origin records!`)
+      
+    } catch (error) {
+      console.error('Error uploading CSV:', error)
+      setPlaceOfOriginStatus('Error uploading CSV file')
+    } finally {
+      setPlaceOfOriginUploading(false)
+    }
+  }
+
   return (
     <div>
       <h1 className="text-2xl font-bold text-gray-500 mb-4">Add Records</h1>
@@ -306,8 +429,22 @@ const AddRecordsCSV = () => {
         {/* Place of Origin */}
         <div className="p-4 border border-gray-300 rounded-md">
           <h2 className="text-lg font-bold text-gray-500 mb-2">Place of Origin</h2>
-          <input type="file" />
-          <button className="bg-blue-500 text-white px-4 py-2 rounded-md">Add CSV</button>
+          <input 
+            type="file" 
+            accept=".csv"
+            onChange={handlePlaceOfOriginCSVUpload}
+            disabled={placeOfOriginUploading}
+            className="mb-2"
+          />
+          <button 
+            className="bg-blue-500 text-white px-4 py-2 rounded-md disabled:opacity-50"
+            disabled={placeOfOriginUploading}
+          >
+            {placeOfOriginUploading ? 'Processing...' : 'Add CSV'}
+          </button>
+          {placeOfOriginStatus && (
+            <p className="text-sm mt-2 text-gray-600">{placeOfOriginStatus}</p>
+          )}
         </div>
 
       </div>
