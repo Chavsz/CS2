@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ResponsiveContainer, ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts'
-import { getEducations, addEducation, updateEducation, type EducationRecord } from '../services/education'
+import { getEducations, addEducation, type EducationRecord } from '../services/education'
 import { getOccupation, type OccupationData } from '../services/occupation'
 
 type Point = { year: number; xPctGraduates: number; yPctProfessionals: number }
@@ -8,7 +8,6 @@ type Point = { year: number; xPctGraduates: number; yPctProfessionals: number }
 const Education = () => {
   const [eduRows, setEduRows] = useState<EducationRecord[]>([])
   const [occRows, setOccRows] = useState<OccupationData[]>([])
-
   const [yearEdu, setYearEdu] = useState('')
   const [totalEdu, setTotalEdu] = useState('')
   const [gradsEdu, setGradsEdu] = useState('')
@@ -44,13 +43,11 @@ const Education = () => {
       occTotalsByYear.set(r.year, { professionals, total })
     }
 
-    const overallEducationTotal = eduRows.reduce((sum, e) => sum + e.total, 0)
-    if (overallEducationTotal === 0) return []
-
     return eduRows.map(er => {
       const occ = occTotalsByYear.get(er.year)
       if (!occ || occ.total === 0) return { year: er.year, xPctGraduates: 0, yPctProfessionals: 0 }
-      const xPctGraduates = ((er.graduates ?? 0) / overallEducationTotal) * 100
+      const denom = er.total || 0
+      const xPctGraduates = denom > 0 ? ((er.graduates ?? 0) / denom) * 100 : 0
       const yPctProfessionals = (occ.professionals / occ.total) * 100
       return { year: er.year, xPctGraduates, yPctProfessionals }
     })
@@ -64,7 +61,7 @@ const Education = () => {
     if (Number.isNaN(year) || Number.isNaN(total)) return
     setSavingEdu(true)
     try {
-      const id = await addEducation({ year, total, graduates })
+      await addEducation({ year, total, graduates })
       setYearEdu('')
       setTotalEdu('')
       setGradsEdu('')
@@ -94,6 +91,8 @@ const Education = () => {
           <input type="number" className="border border-gray-300 rounded-md px-2 py-1 w-40" value={gradsEdu} onChange={(e) => setGradsEdu(e.target.value)} />
         </div>
         <button type="submit" disabled={savingEdu} className="bg-blue-600 text-white rounded-md px-4 py-2 disabled:opacity-60">{savingEdu ? 'Saving...' : 'Add Education'}</button>
+        {/* Delete ALl */}
+        <button></button>
       </form>
 
       <div className="w-full h-[360px]">
@@ -117,6 +116,28 @@ const Education = () => {
             <Scatter name="Year" data={points} fill="#10b981" />
           </ScatterChart>
         </ResponsiveContainer>
+      </div>
+      {/* Data Table */}
+      <div className="mt-6">
+        <h3 className="text-lg font-semibold text-gray-600 mb-3">Education Records</h3>
+        <table className="w-full border-collapse border border-gray-300">
+          <thead>
+            <tr className="bg-gray-50">
+              <th className="p-3 border border-gray-300 text-left">Year</th>
+              <th className="p-3 border border-gray-300 text-left">College Graduates</th>
+              <th className="p-3 border border-gray-300 text-left">Total Education</th>
+            </tr>
+          </thead>
+          <tbody>
+            {eduRows.map(er => (
+              <tr key={er.year}>
+                <td className="p-3 border border-gray-300">{er.year}</td>
+                <td className="p-3 border border-gray-300">{(er.graduates ?? 0).toLocaleString()}</td>
+                <td className="p-3 border border-gray-300">{er.total.toLocaleString()}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
       <p className="text-sm text-gray-500 mt-2">Each dot is a year; X = % of graduates out of all education totals, Y = % of professionals out of total occupation for that year.</p>
     </div>

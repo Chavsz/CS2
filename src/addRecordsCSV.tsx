@@ -3,6 +3,10 @@ import { addAge, deleteAllAges, type AgeRecord } from './services/age'
 import { addMajorCountries, deleteAllMajorCountries } from './services/majorCountries'
 import { addSex, deleteAllSex, type SexRecord } from './services/sex'
 import { addPlaceOfOrigin, deleteAllPlaceOfOrigin, type PlaceOfOriginData } from './services/placeOfOrigin'
+import { addOccupation, deleteAllOccupation, type OccupationData } from './services/occupation'
+import { addEducation, deleteAllEducation, type EducationRecord } from './services/education'
+import { addCountryYear, deleteAllCountryYears } from './services/allCountries'
+import { addCivilStatus, deleteAllCivilStatus, type CivilStatusRecord } from './services/civilStatus'
 
 const AddRecordsCSV = () => {
   const [uploading, setUploading] = useState(false)
@@ -13,6 +17,14 @@ const AddRecordsCSV = () => {
   const [sexStatus, setSexStatus] = useState('')
   const [placeOfOriginUploading, setPlaceOfOriginUploading] = useState(false)
   const [placeOfOriginStatus, setPlaceOfOriginStatus] = useState('')
+  const [occupationUploading, setOccupationUploading] = useState(false)
+  const [occupationStatus, setOccupationStatus] = useState('')
+  const [civilStatusUploading, setCivilStatusUploading] = useState(false)
+  const [civilStatusStatus, setCivilStatusStatus] = useState('')
+  const [educationUploading, setEducationUploading] = useState(false)
+  const [educationStatus, setEducationStatus] = useState('')
+  const [allCountriesUploading, setAllCountriesUploading] = useState(false)
+  const [allCountriesStatus, setAllCountriesStatus] = useState('')
 
   const parseAgeCSV = (csvText: string): AgeRecord[] => {
     const lines = csvText.split('\n')
@@ -185,6 +197,219 @@ const AddRecordsCSV = () => {
     return data
   }
 
+  const parseOccupationCSV = (csvText: string): OccupationData[] => {
+    const lines = csvText.split('\n')
+    const data: OccupationData[] = []
+    
+    // Skip header row (first line)
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i].trim()
+      
+      if (line === '' || line.includes('TOTAL')) {
+        continue // Skip empty lines and summary rows
+      }
+      
+      const columns = line.split(',')
+      
+      if (columns.length >= 42) { // MAJOR OCCUPATION GROUP + 40 years + TOTAL + %
+        const occupation = columns[0].trim()
+        
+        // Map occupation names to the service field names
+        const occupationMapping: { [key: string]: string } = {
+          'Prof\'lTech\'l&RelatedWorkers': 'professionalTechnical',
+          'ManagerialExecutiveandAdministrativeWorkers': 'managerialExecutive',
+          'ClericalWorkers': 'clericalWorkers',
+          'SalesWorkers': 'salesWorkers',
+          'ServiceWorkers': 'serviceWorkers',
+          'AgriAnimalHusbandryForestryWorkers&Fishermen': 'agriculturalWorkers',
+          'ProductionProcessTransportEquipmentOperators&Laborers': 'productionTransportLaborers',
+          'MembersoftheArmedForces': 'armedForces',
+          'Housewives': 'housewives',
+          'Retirees': 'retirees',
+          'Students': 'students',
+          'Minors(Below7yearsold)': 'minors',
+          'OutofSchoolYouth': 'outOfSchoolYouth',
+          'Refugees': 'refugees',
+          'NoOccupationReported': 'noOccupationReported'
+        }
+        
+        const fieldName = occupationMapping[occupation]
+        if (fieldName) {
+          // Extract data for each year from 1981 to 2020
+          for (let year = 1981; year <= 2020; year++) {
+            const columnIndex = year - 1981 + 1 // +1 because first column is MAJOR OCCUPATION GROUP
+            if (columnIndex < columns.length) {
+              const value = parseInt(columns[columnIndex].trim() || '0', 10)
+              
+              if (!isNaN(value) && value > 0) {
+                // Find existing record for this year or create new one
+                let existingRecord = data.find(d => d.year === year)
+                if (!existingRecord) {
+                  existingRecord = {
+                    year,
+                    professionalTechnical: 0,
+                    managerialExecutive: 0,
+                    clericalWorkers: 0,
+                    salesWorkers: 0,
+                    serviceWorkers: 0,
+                    agriculturalWorkers: 0,
+                    productionTransportLaborers: 0,
+                    armedForces: 0,
+                    housewives: 0,
+                    retirees: 0,
+                    students: 0,
+                    minors: 0,
+                    outOfSchoolYouth: 0,
+                    refugees: 0,
+                    noOccupationReported: 0
+                  }
+                  data.push(existingRecord)
+                }
+                
+                // Set the value for the specific occupation
+                ;(existingRecord as any)[fieldName] = value
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    return data
+  }
+
+  // Education: extract Year, Total (TOTAL row), and CollegeGraduate per year
+  // CSV header includes many attainment categories; we only need TOTAL and CollegeGraduate columns
+  const parseEducationCSV = (csvText: string): EducationRecord[] => {
+    const lines = csvText.split('\n')
+    if (lines.length === 0) return []
+    // header holds attainment names and ends with TOTAL, %
+    const header = lines[0].trim().split(',')
+    // Find indices for years (1988..2020) and the two rows we care about
+    const yearStart = 1988
+    const yearEnd = 2020
+    // Build a map of year -> column index in header
+    const yearToCol: Record<number, number> = {}
+    for (let y = yearStart; y <= yearEnd; y++) {
+      const idx = header.findIndex(h => h.trim() === String(y))
+      if (idx !== -1) yearToCol[y] = idx
+    }
+    if (Object.keys(yearToCol).length === 0) return []
+
+    // Identify row lines for CollegeGraduate and TOTAL
+    let collegeLine: string | null = null
+    let totalLine: string | null = null
+    for (let i = 1; i < lines.length; i++) {
+      const row = lines[i].trim()
+      if (!row) continue
+      if (row.startsWith('CollegeGraduate')) collegeLine = row
+      if (row.startsWith('TOTAL')) totalLine = row
+    }
+    if (!collegeLine || !totalLine) return []
+
+    const collegeCols = collegeLine.split(',')
+    const totalCols = totalLine.split(',')
+
+    const result: EducationRecord[] = []
+    for (let y = yearStart; y <= yearEnd; y++) {
+      const col = yearToCol[y]
+      if (col == null) continue
+      const total = parseInt((totalCols[col] || '').trim() || '0', 10)
+      const grad = parseInt((collegeCols[col] || '').trim() || '0', 10)
+      if (!Number.isNaN(y) && !Number.isNaN(total)) {
+        const rec: EducationRecord = { year: y, total }
+        if (!Number.isNaN(grad)) rec.graduates = grad
+        result.push(rec)
+      }
+    }
+    return result
+  }
+
+  // Utilities for All Countries mapping
+  const normalizeCountryName = (name: string): string =>
+    name
+      .toUpperCase()
+      .replace(/\s+/g, ' ')
+      .replace(/\s*&\s*/g, ' & ')
+      .replace(/[().,'*]/g, '')
+      .replace(/-/g, ' ')
+      .replace(/\s*\*+\s*$/, '')
+      .trim()
+
+  const CSV_NAME_ALIASES: Record<string, string> = {
+    'CHINA PROC': 'CHINA',
+    'HONGKONG': 'HONG KONG',
+    'TAIWAN ROC': 'TAIWAN',
+    'RUSSIAN FEDERATION / USSR': 'RUSSIA',
+    'DEMOCRATIC REPUBLIC OF THE CONGO ZAIRE': 'DEMOCRATIC REPUBLIC OF THE CONGO',
+    'DEMOCRATIC KAMPUCHEA': 'CAMBODIA',
+    'MYANMAR BURMA': 'MYANMAR',
+    'MACEDONIA': 'NORTH MACEDONIA',
+    'SLOVAK REPUBLIC': 'SLOVAKIA',
+    'CZECH REPUBLIC': 'CZECH REPUBLIC',
+    // Common long-form names
+    'UNITED STATES OF AMERICA': 'UNITED STATES OF AMERICA',
+    'UNITED KINGDOM OF GREAT BRITAIN AND NORTHERN IRELAND': 'UNITED KINGDOM',
+  }
+
+  // All Countries CSV: two columns COUNTRY, TOTAL; ignore GRAND TOTAL
+  const parseAllCountriesCSV = (
+    csvText: string,
+    nameToIso3: Map<string, string>
+  ): { iso3: string; count: number; raw: string }[] => {
+    const lines = csvText.split('\n')
+    const data: { iso3: string; count: number; raw: string }[] = []
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i].trim()
+      if (!line) continue
+      const [rawCountryPart, rawCountPart] = line.split(',')
+      if (!rawCountryPart || !rawCountPart) continue
+      const country = rawCountryPart.replace(/"/g, '').trim()
+      const upper = country.toUpperCase()
+      if (upper === 'GRAND TOTAL') continue
+      const countStr = rawCountPart.replace(/"/g, '').replace(/,/g, '').trim()
+      const count = parseInt(countStr, 10)
+      if (Number.isNaN(count) || count <= 0) continue
+      // If already ISO3, accept directly
+      if (/^[A-Z]{3}$/.test(upper)) {
+        data.push({ iso3: upper, count, raw: country })
+        continue
+      }
+      // Map country names to ISO3 using world geojson mapping
+      const normalized = normalizeCountryName(country)
+      const alias = CSV_NAME_ALIASES[normalized] ?? normalized
+      const iso3 = nameToIso3.get(alias)
+      if (iso3) {
+        data.push({ iso3, count, raw: country })
+      }
+    }
+    return data
+  }
+
+  const parseCivilStatusCSV = (csvText: string): CivilStatusRecord[] => {
+    const lines = csvText.split('\n')
+    const data: CivilStatusRecord[] = []
+    // Skip header row
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i].trim()
+      if (line === '' || line.startsWith('TOTAL')) continue
+      const columns = line.split(',')
+      if (columns.length >= 7) {
+        const year = parseInt(columns[0].trim(), 10)
+        const single = parseInt(columns[1].trim(), 10)
+        const married = parseInt(columns[2].trim(), 10)
+        const widower = parseInt(columns[3].trim(), 10)
+        const separated = parseInt(columns[4].trim(), 10)
+        const divorced = parseInt(columns[5].trim(), 10)
+        const notReported = parseInt(columns[6].trim(), 10)
+        if ([year, single, married, widower, separated, divorced, notReported].every(v => !Number.isNaN(v))) {
+          data.push({ year, single, married, widower, separated, divorced, notReported })
+        }
+      }
+    }
+    return data
+  }
+
   const handleAgeCSVUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (!file) return
@@ -329,6 +554,142 @@ const AddRecordsCSV = () => {
     }
   }
 
+  const handleOccupationCSVUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    setOccupationUploading(true)
+    setOccupationStatus('Processing CSV file...')
+
+    try {
+      const text = await file.text()
+      const occupationData = parseOccupationCSV(text)
+      
+      if (occupationData.length === 0) {
+        setOccupationStatus('No valid data found in CSV file')
+        return
+      }
+
+      setOccupationStatus(`Found ${occupationData.length} records. Uploading to database...`)
+      
+      // Clear existing data first
+      await deleteAllOccupation()
+      
+      // Add new data
+      for (const record of occupationData) {
+        await addOccupation(record)
+      }
+      
+      setOccupationStatus(`Successfully uploaded ${occupationData.length} occupation records!`)
+      
+    } catch (error) {
+      console.error('Error uploading CSV:', error)
+      setOccupationStatus('Error uploading CSV file')
+    } finally {
+      setOccupationUploading(false)
+    }
+  }
+
+  const handleEducationCSVUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    setEducationUploading(true)
+    setEducationStatus('Processing CSV file...')
+
+    try {
+      const text = await file.text()
+      const eduData = parseEducationCSV(text)
+      if (eduData.length === 0) {
+        setEducationStatus('No valid data found in CSV file')
+        return
+      }
+
+      setEducationStatus(`Found ${eduData.length} records. Uploading to database...`)
+      await deleteAllEducation()
+      for (const rec of eduData) {
+        await addEducation(rec)
+      }
+      setEducationStatus(`Successfully uploaded ${eduData.length} education records!`)
+    } catch (e) {
+      console.error('Error uploading CSV:', e)
+      setEducationStatus('Error uploading CSV file')
+    } finally {
+      setEducationUploading(false)
+    }
+  }
+
+  const handleAllCountriesCSVUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    setAllCountriesUploading(true)
+    setAllCountriesStatus('Processing CSV file...')
+
+    try {
+      // Build mapping from country name -> ISO3 via world geojson
+      const WORLD_GEOJSON_URL = 'https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson'
+      const res = await fetch(WORLD_GEOJSON_URL)
+      const json = await res.json()
+      const nameToIso3 = new Map<string, string>()
+      for (const f of (json?.features ?? [])) {
+        const label = (f?.properties?.name ?? f?.properties?.NAME ?? '').toString()
+        const id = (f?.id ?? f?.properties?.iso_a3 ?? '').toString()
+        if (!label || !id) continue
+        nameToIso3.set(normalizeCountryName(label), id)
+      }
+
+      const text = await file.text()
+      const rows = parseAllCountriesCSV(text, nameToIso3)
+      if (rows.length === 0) {
+        setAllCountriesStatus('No valid country rows found in CSV (COUNTRY, TOTAL).')
+        return
+      }
+      setAllCountriesStatus(`Found ${rows.length} rows. Uploading...`)
+      await deleteAllCountryYears()
+      for (const r of rows) {
+        await addCountryYear({ iso3: r.iso3, count: r.count })
+      }
+      setAllCountriesStatus(`Successfully uploaded ${rows.length} country totals!`)
+    } catch (e) {
+      console.error('Error uploading CSV:', e)
+      setAllCountriesStatus('Error uploading CSV file')
+    } finally {
+      setAllCountriesUploading(false)
+    }
+  }
+
+  const handleCivilStatusCSVUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    setCivilStatusUploading(true)
+    setCivilStatusStatus('Processing CSV file...')
+
+    try {
+      const text = await file.text()
+      const civilData = parseCivilStatusCSV(text)
+
+      if (civilData.length === 0) {
+        setCivilStatusStatus('No valid data found in CSV file')
+        return
+      }
+
+      setCivilStatusStatus(`Found ${civilData.length} records. Uploading to database...`)
+
+      await deleteAllCivilStatus()
+      for (const record of civilData) {
+        await addCivilStatus(record)
+      }
+      setCivilStatusStatus(`Successfully uploaded ${civilData.length} civil status records!`)
+    } catch (error) {
+      console.error('Error uploading CSV:', error)
+      setCivilStatusStatus('Error uploading CSV file')
+    } finally {
+      setCivilStatusUploading(false)
+    }
+  }
+
   return (
     <div>
       <h1 className="text-2xl font-bold text-gray-500 mb-4">Add Records</h1>
@@ -359,8 +720,22 @@ const AddRecordsCSV = () => {
         {/* All Countries */}
         <div className="p-4 border border-gray-300 rounded-md">
           <h2 className="text-lg font-bold text-gray-500 mb-2">All Countries</h2>
-          <input type="file" />
-          <button className="bg-blue-500 text-white px-4 py-2 rounded-md">Add CSV</button>
+          <input 
+            type="file" 
+            accept=".csv"
+            onChange={handleAllCountriesCSVUpload}
+            disabled={allCountriesUploading}
+            className="mb-2"
+          />
+          <button 
+            className="bg-blue-500 text-white px-4 py-2 rounded-md disabled:opacity-50"
+            disabled={allCountriesUploading}
+          >
+            {allCountriesUploading ? 'Processing...' : 'Add CSV'}
+          </button>
+          {allCountriesStatus && (
+            <p className="text-sm mt-2 text-gray-600">{allCountriesStatus}</p>
+          )}
         </div>
 
         {/* Major Countries */}
@@ -387,8 +762,22 @@ const AddRecordsCSV = () => {
         {/* Occupation */}
         <div className="p-4 border border-gray-300 rounded-md">
           <h2 className="text-lg font-bold text-gray-500 mb-2">Occupation</h2>
-          <input type="file" />
-          <button className="bg-blue-500 text-white px-4 py-2 rounded-md">Add CSV</button>
+          <input 
+            type="file" 
+            accept=".csv"
+            onChange={handleOccupationCSVUpload}
+            disabled={occupationUploading}
+            className="mb-2"
+          />
+          <button 
+            className="bg-blue-500 text-white px-4 py-2 rounded-md disabled:opacity-50"
+            disabled={occupationUploading}
+          >
+            {occupationUploading ? 'Processing...' : 'Add CSV'}
+          </button>
+          {occupationStatus && (
+            <p className="text-sm mt-2 text-gray-600">{occupationStatus}</p>
+          )}
         </div>
 
         {/* Sex */}
@@ -415,15 +804,43 @@ const AddRecordsCSV = () => {
         {/* Civil Status */}
         <div className="p-4 border border-gray-300 rounded-md">
           <h2 className="text-lg font-bold text-gray-500 mb-2">Civil Status</h2>
-          <input type="file" />
-          <button className="bg-blue-500 text-white px-4 py-2 rounded-md">Add CSV</button>
+          <input 
+            type="file" 
+            accept=".csv"
+            onChange={handleCivilStatusCSVUpload}
+            disabled={civilStatusUploading}
+            className="mb-2"
+          />
+          <button 
+            className="bg-blue-500 text-white px-4 py-2 rounded-md disabled:opacity-50"
+            disabled={civilStatusUploading}
+          >
+            {civilStatusUploading ? 'Processing...' : 'Add CSV'}
+          </button>
+          {civilStatusStatus && (
+            <p className="text-sm mt-2 text-gray-600">{civilStatusStatus}</p>
+          )}
         </div>
 
         {/* Education */}
         <div className="p-4 border border-gray-300 rounded-md">
           <h2 className="text-lg font-bold text-gray-500 mb-2">Education</h2>
-          <input type="file" />
-          <button className="bg-blue-500 text-white px-4 py-2 rounded-md">Add CSV</button>
+          <input 
+            type="file" 
+            accept=".csv"
+            onChange={handleEducationCSVUpload}
+            disabled={educationUploading}
+            className="mb-2"
+          />
+          <button 
+            className="bg-blue-500 text-white px-4 py-2 rounded-md disabled:opacity-50"
+            disabled={educationUploading}
+          >
+            {educationUploading ? 'Processing...' : 'Add CSV'}
+          </button>
+          {educationStatus && (
+            <p className="text-sm mt-2 text-gray-600">{educationStatus}</p>
+          )}
         </div>
 
         {/* Place of Origin */}

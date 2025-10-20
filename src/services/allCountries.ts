@@ -31,4 +31,11 @@ export const deleteCountryYear = async (id: string) => {
   await deleteDoc(ref)
 }
 
+export const deleteAllCountryYears = async () => {
+  const snapshot = await getDocs(countriesCollection)
+  snapshot.docs.forEach(async (d) => {
+    await deleteDoc(d.ref)
+  })
+}
+
 

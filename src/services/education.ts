@@ -32,3 +32,10 @@ export const deleteEducation = async (id: string) => {
   await deleteDoc(ref)
 }
 
+export const deleteAllEducation = async () => {
+  const snapshot = await getDocs(educationCollection)
+  snapshot.docs.forEach(async (doc) => {
+    await deleteDoc(doc.ref)
+  })
+}
+

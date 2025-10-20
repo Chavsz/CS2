@@ -35,3 +35,10 @@ export const deleteCivilStatus = async (id: string) => {
   await deleteDoc(ref)
 }
 
+export const deleteAllCivilStatus = async () => {
+  const snapshot = await getDocs(civilCollection)
+  snapshot.docs.forEach(async (doc) => {
+    await deleteDoc(doc.ref)
+  })
+}
+
