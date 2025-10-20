@@ -67,3 +67,10 @@ export const deleteOccupation = async (id: string) => {
     throw error;
   }
 };
+
+export const deleteAllOccupation = async () => {
+  const snapshot = await getDocs(collection(db, COLLECTION_NAME));
+  snapshot.docs.forEach(async (doc) => {
+    await deleteDoc(doc.ref);
+  });
+};
