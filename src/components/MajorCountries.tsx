@@ -23,7 +23,7 @@ function MajorCountries() {
   const [filteredData, setFilteredData] = useState<MajorCountries[]>([]);
   const [filterType, setFilterType] = useState<'year' | 'total'>('total');
   const [selectedYear, setSelectedYear] = useState<string>('');
-  const [showModal, setShowModal] = useState(false);
+  
   const [deleting, setDeleting] = useState(false);
   const [form, setForm] = useState({
     year: "",
@@ -64,42 +64,14 @@ function MajorCountries() {
     }
   }, [filterType, selectedYear, majorCountries]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const handleAdd = async () => {
-    await addMajorCountries({
-      year: Number(form.year) || 0,
-      Usa: Number(form.Usa) || 0,
-      Canada: Number(form.Canada) || 0,
-      Japan: Number(form.Japan) || 0,
-      Australia: Number(form.Australia) || 0,
-      Italy: Number(form.Italy) || 0,
-      NewZealand: Number(form.NewZealand) || 0,
-      UnitedKingdom: Number(form.UnitedKingdom) || 0,
-      Germany: Number(form.Germany) || 0,
-      SouthKorea: Number(form.SouthKorea) || 0,
-      Spain: Number(form.Spain) || 0,
-      Others: Number(form.Others) || 0,
-    });
-    setForm({ year: "", Usa: "", Canada: "", Japan: "", Australia: "", Italy: "", NewZealand: "", UnitedKingdom: "", Germany: "", SouthKorea: "", Spain: "", Others: "" });
-    setShowModal(false);
-    fetchData();
-  };
+  
 
   const handleDelete = async (id: string) => {
     await deleteMajorCountries(id);
     fetchData();
   };
 
-  const handleUpdate = async (id: string) => {
-    const newYear = prompt("Enter new year:");
-    if (newYear) {
-      await updateMajorCountries(id, { year: Number(newYear) } as MajorCountries);
-      fetchData();
-    }
-  };
+  
 
   // Compute totals for bar chart based on filtered data
   const totals = filteredData.reduce((acc, cur) => {
@@ -181,12 +153,7 @@ function MajorCountries() {
             >
               Total
             </button>
-            <button 
-              onClick={() => setShowModal(true)}
-              className="px-4 py-2 bg-green-500 text-white border-none rounded cursor-pointer"
-            >
-              Add Record
-            </button>
+            
             {/* Delete All Records */}
             <button
               onClick={onDeleteAll}
@@ -218,97 +185,9 @@ function MajorCountries() {
         </ResponsiveContainer>
       </div>
 
-      {/* Table */}
-      <table className="w-full border-collapse border border-gray-300">
-        <thead>
-          <tr className="bg-gray-50">
-            <th className="p-3 border border-gray-300 text-left">Year</th>
-            <th className="p-3 border border-gray-300 text-left">USA</th>
-            <th className="p-3 border border-gray-300 text-left">Canada</th>
-            <th className="p-3 border border-gray-300 text-left">Japan</th>
-            <th className="p-3 border border-gray-300 text-left">Australia</th>
-            <th className="p-3 border border-gray-300 text-left">Italy</th>
-            <th className="p-3 border border-gray-300 text-left">New Zealand</th>
-            <th className="p-3 border border-gray-300 text-left">United Kingdom</th>
-            <th className="p-3 border border-gray-300 text-left">Germany</th>
-            <th className="p-3 border border-gray-300 text-left">South Korea</th>
-            <th className="p-3 border border-gray-300 text-left">Spain</th>
-            <th className="p-3 border border-gray-300 text-left">Others</th>
-            <th className="p-3 border border-gray-300 text-left">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredData.map(e => (
-            <tr key={e.id}>
-              <td className="p-3 border border-gray-300">{e.year || 0}</td>
-              <td className="p-3 border border-gray-300">{e.Usa || 0}</td>
-              <td className="p-3 border border-gray-300">{e.Canada || 0}</td>
-              <td className="p-3 border border-gray-300">{e.Japan || 0}</td>
-              <td className="p-3 border border-gray-300">{e.Australia || 0}</td>
-              <td className="p-3 border border-gray-300">{e.Italy || 0}</td>
-              <td className="p-3 border border-gray-300">{e.NewZealand || 0}</td>
-              <td className="p-3 border border-gray-300">{e.UnitedKingdom || 0}</td>
-              <td className="p-3 border border-gray-300">{e.Germany || 0}</td>
-              <td className="p-3 border border-gray-300">{e.SouthKorea || 0}</td>
-              <td className="p-3 border border-gray-300">{e.Spain || 0}</td>
-              <td className="p-3 border border-gray-300">{e.Others || 0}</td>
-              <td className="p-3 border border-gray-300">
-                <button 
-                  onClick={() => handleUpdate(e.id)}
-                  className="mr-1 px-2 py-1 bg-yellow-400 text-black border-none rounded cursor-pointer"
-                >
-                  Update
-                </button>
-                <button 
-                  onClick={() => handleDelete(e.id)}
-                  className="px-2 py-1 bg-red-500 text-white border-none rounded cursor-pointer"
-                >
-                  Delete
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      
 
-      {/* Modal for Add Record */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black/15 flex justify-center items-center z-50">
-          <div className="bg-white p-8 rounded-lg w-[600px] max-h-screen overflow-y-auto">
-            <h2 className="mb-5 text-center">Add New Record</h2>
-            <div className="grid grid-cols-3 gap-2">
-              {Object.keys(form).map(key => (
-                <div key={key}>
-                  <label className="block mb-1 font-bold">
-                    {key.charAt(0).toUpperCase() + key.slice(1)}
-                  </label>
-                  <input
-                    name={key}
-                    placeholder={key}
-                    value={form[key as keyof typeof form]}
-                    onChange={handleChange}
-                    className="w-full p-2 border border-gray-300 rounded box-border"
-                  />
-                </div>
-              ))}
-            </div>
-            <div className="flex justify-center gap-2 mt-5">
-              <button 
-                onClick={handleAdd}
-                className="px-5 py-2 bg-green-500 text-white border-none rounded cursor-pointer"
-              >
-                Add Record
-              </button>
-              <button 
-                onClick={() => setShowModal(false)}
-                className="px-5 py-2 bg-gray-500 text-white border-none rounded cursor-pointer"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      
     </div>
   );
 }

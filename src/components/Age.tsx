@@ -1,14 +1,10 @@
 import { useEffect, useState } from 'react'
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts'
-import { getAges, addAge, type AgeRecord, deleteAllAges } from '../services/age'
+import { getAges, type AgeRecord } from '../services/age'
 
 const Age = () => {
   const [data, setData] = useState<AgeRecord[]>([])
-  const [yearInput, setYearInput] = useState('')
-  const [totalInput, setTotalInput] = useState('')
-  const [saving, setSaving] = useState(false)
-  const [deleting, setDeleting] = useState(false)
-  const [deleted, setDeleted] = useState(false)
+  
 
   useEffect(() => {
     (async () => {
@@ -19,81 +15,9 @@ const Age = () => {
     })()
   }, [])
 
-  const reload = async () => {
-    const rows = await getAges()
-    rows.sort((a, b) => a.year - b.year)
-    setData(rows)
-  }
-
-  const onAdd = async (e: React.FormEvent) => {
-    e.preventDefault()
-    const year = parseInt(yearInput, 10)
-    const total = parseInt(totalInput, 10)
-    if (Number.isNaN(year) || Number.isNaN(total)) return
-    setSaving(true)
-    try {
-      await addAge({ year, total })
-      setYearInput('')
-      setTotalInput('')
-      await reload()
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  const onDeleteAll = async () => {
-    setDeleting(true)
-    try {
-      alert('Deleting all ages...')
-      await deleteAllAges()
-      await reload()
-      setDeleted(true)
-    } finally {
-      setDeleting(false)
-    }
-  }
   return (
     <div className="w-full">
       <h2 className="text-xl font-semibold text-gray-600 mb-3">Age: Total Emigrants by Year</h2>
-
-      <form onSubmit={onAdd} className="flex items-end gap-3 mb-4">
-        <div className="flex flex-col">
-          <label className="text-sm text-gray-600">Year</label>
-          <input
-            type="number"
-            className="border border-gray-300 rounded-md px-2 py-1 w-32"
-            value={yearInput}
-            onChange={(e) => setYearInput(e.target.value)}
-            required
-          />
-        </div>
-        <div className="flex flex-col">
-          <label className="text-sm text-gray-600">Total</label>
-          <input
-            type="number"
-            className="border border-gray-300 rounded-md px-2 py-1 w-40"
-            value={totalInput}
-            onChange={(e) => setTotalInput(e.target.value)}
-            required
-          />
-        </div>
-        <button
-          type="submit"
-          disabled={saving}
-          className="bg-blue-600 text-white rounded-md px-4 py-2 disabled:opacity-60"
-        >
-          {saving ? 'Saving...' : 'Add'}
-        </button>
-        {/* Delete All button */}
-        <button
-          type="button"
-          disabled={deleting}
-          onClick={onDeleteAll}
-          className="bg-red-600 text-white rounded-md px-4 py-2"
-        >
-          {deleting ? 'Deleting...' : 'Delete All'}
-        </button>
-      </form>
 
       <div className="w-full h-[360px]">
         <ResponsiveContainer width="100%" height="100%">

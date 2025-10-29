@@ -25,7 +25,7 @@ function Occupation() {
   const [categoryFilter, setCategoryFilter] = useState<
     "all" | "employed" | "unemployed"
   >("all");
-  const [showModal, setShowModal] = useState(false);
+  
   const [deleting, setDeleting] = useState(false);
   const [deleted, setDeleted] = useState(false);
   const [form, setForm] = useState({
@@ -75,64 +75,14 @@ function Occupation() {
     }
   }, [filterType, selectedYear, occupationData]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const handleAdd = async () => {
-    await addOccupation({
-      year: Number(form.year) || 0,
-      professionalTechnical: Number(form.professionalTechnical) || 0,
-      managerialExecutive: Number(form.managerialExecutive) || 0,
-      clericalWorkers: Number(form.clericalWorkers) || 0,
-      salesWorkers: Number(form.salesWorkers) || 0,
-      serviceWorkers: Number(form.serviceWorkers) || 0,
-      agriculturalWorkers: Number(form.agriculturalWorkers) || 0,
-      productionTransportLaborers:
-        Number(form.productionTransportLaborers) || 0,
-      armedForces: Number(form.armedForces) || 0,
-      housewives: Number(form.housewives) || 0,
-      retirees: Number(form.retirees) || 0,
-      students: Number(form.students) || 0,
-      minors: Number(form.minors) || 0,
-      outOfSchoolYouth: Number(form.outOfSchoolYouth) || 0,
-      refugees: Number(form.refugees) || 0,
-      noOccupationReported: Number(form.noOccupationReported) || 0,
-    });
-    setForm({
-      year: "",
-      professionalTechnical: "",
-      managerialExecutive: "",
-      clericalWorkers: "",
-      salesWorkers: "",
-      serviceWorkers: "",
-      agriculturalWorkers: "",
-      productionTransportLaborers: "",
-      armedForces: "",
-      housewives: "",
-      retirees: "",
-      students: "",
-      minors: "",
-      outOfSchoolYouth: "",
-      refugees: "",
-      noOccupationReported: "",
-    });
-    setShowModal(false);
-    fetchData();
-  };
+  
 
   const handleDelete = async (id: string) => {
     await deleteOccupation(id);
     fetchData();
   };
 
-  const handleUpdate = async (id: string) => {
-    const newYear = prompt("Enter new year:");
-    if (newYear) {
-      await updateOccupation(id, { year: Number(newYear) });
-      fetchData();
-    }
-  };
+  
 
   // Compute totals for histogram based on filtered data
   const totals = filteredData.reduce(
@@ -298,12 +248,7 @@ function Occupation() {
             >
               Total
             </button>
-            <button
-              onClick={() => setShowModal(true)}
-              className="px-4 py-2 bg-green-500 text-white border-none rounded cursor-pointer"
-            >
-              Add Record
-            </button>
+            
             {/* Delete ALL Record */}
             <button
               onClick={onDeleteAll}
@@ -401,151 +346,9 @@ function Occupation() {
         </ResponsiveContainer>
       </div>
 
-      {/* Table */}
-      <table className="w-full border-collapse border border-gray-300">
-        <thead>
-          <tr className="bg-gray-50">
-            <th className="p-3 border border-gray-300 text-left">Year</th>
-            <th className="p-3 border border-gray-300 text-left">
-              Professional & Technical
-            </th>
-            <th className="p-3 border border-gray-300 text-left">
-              Managerial & Executive
-            </th>
-            <th className="p-3 border border-gray-300 text-left">
-              Clerical Workers
-            </th>
-            <th className="p-3 border border-gray-300 text-left">
-              Sales Workers
-            </th>
-            <th className="p-3 border border-gray-300 text-left">
-              Service Workers
-            </th>
-            <th className="p-3 border border-gray-300 text-left">
-              Agricultural Workers
-            </th>
-            <th className="p-3 border border-gray-300 text-left">
-              Production & Transport
-            </th>
-            <th className="p-3 border border-gray-300 text-left">
-              Armed Forces
-            </th>
-            <th className="p-3 border border-gray-300 text-left">Housewives</th>
-            <th className="p-3 border border-gray-300 text-left">Retirees</th>
-            <th className="p-3 border border-gray-300 text-left">Students</th>
-            <th className="p-3 border border-gray-300 text-left">Minors</th>
-            <th className="p-3 border border-gray-300 text-left">
-              Out of School Youth
-            </th>
-            <th className="p-3 border border-gray-300 text-left">Refugees</th>
-            <th className="p-3 border border-gray-300 text-left">
-              No Occupation Reported
-            </th>
-            <th className="p-3 border border-gray-300 text-left">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredData.map((e) => (
-            <tr key={e.id}>
-              <td className="p-3 border border-gray-300">{e.year || 0}</td>
-              <td className="p-3 border border-gray-300">
-                {e.professionalTechnical || 0}
-              </td>
-              <td className="p-3 border border-gray-300">
-                {e.managerialExecutive || 0}
-              </td>
-              <td className="p-3 border border-gray-300">
-                {e.clericalWorkers || 0}
-              </td>
-              <td className="p-3 border border-gray-300">
-                {e.salesWorkers || 0}
-              </td>
-              <td className="p-3 border border-gray-300">
-                {e.serviceWorkers || 0}
-              </td>
-              <td className="p-3 border border-gray-300">
-                {e.agriculturalWorkers || 0}
-              </td>
-              <td className="p-3 border border-gray-300">
-                {e.productionTransportLaborers || 0}
-              </td>
-              <td className="p-3 border border-gray-300">
-                {e.armedForces || 0}
-              </td>
-              <td className="p-3 border border-gray-300">
-                {e.housewives || 0}
-              </td>
-              <td className="p-3 border border-gray-300">{e.retirees || 0}</td>
-              <td className="p-3 border border-gray-300">{e.students || 0}</td>
-              <td className="p-3 border border-gray-300">{e.minors || 0}</td>
-              <td className="p-3 border border-gray-300">
-                {e.outOfSchoolYouth || 0}
-              </td>
-              <td className="p-3 border border-gray-300">{e.refugees || 0}</td>
-              <td className="p-3 border border-gray-300">
-                {e.noOccupationReported || 0}
-              </td>
-              <td className="p-3 border border-gray-300">
-                <button
-                  onClick={() => handleUpdate(e.id!)}
-                  className="mr-1 px-2 py-1 bg-yellow-400 text-black border-none rounded cursor-pointer"
-                >
-                  Update
-                </button>
-                <button
-                  onClick={() => handleDelete(e.id!)}
-                  className="px-2 py-1 bg-red-500 text-white border-none rounded cursor-pointer"
-                >
-                  Delete
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      
 
-      {/* Modal for Add Record */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black/15 flex justify-center items-center z-50">
-          <div className="bg-white p-8 rounded-lg w-96 max-h-screen overflow-y-auto">
-            <h2 className="mb-5 text-center">Add New Occupation Record</h2>
-            <div className="grid grid-cols-2 gap-2">
-              {Object.keys(form).map((key) => (
-                <div key={key}>
-                  <label className="block mb-1 font-bold">
-                    {key.charAt(0).toUpperCase() +
-                      key
-                        .slice(1)
-                        .replace(/([A-Z])/g, " $1")
-                        .trim()}
-                  </label>
-                  <input
-                    name={key}
-                    placeholder={key}
-                    value={form[key as keyof typeof form]}
-                    onChange={handleChange}
-                    className="w-full p-2 border border-gray-300 rounded box-border"
-                  />
-                </div>
-              ))}
-            </div>
-            <div className="flex justify-center gap-2 mt-5">
-              <button
-                onClick={handleAdd}
-                className="px-5 py-2 bg-green-500 text-white border-none rounded cursor-pointer"
-              >
-                Add Record
-              </button>
-              <button
-                onClick={() => setShowModal(false)}
-                className="px-5 py-2 bg-gray-500 text-white border-none rounded cursor-pointer"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      
     </div>
   );
 }

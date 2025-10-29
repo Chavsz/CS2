@@ -1,11 +1,14 @@
 import { Routes, Route } from "react-router-dom";
 import Sidebar from "./sidebar";
-import Dashboard from "./dashboard";
-import AddRecordsCSV from "./addRecordsCSV"
 import Login from "./auth/login";
 import Register from "./auth/register";
 import { useAuth } from "./contexts/authContexts/auth";
 import type { AuthContextType } from "./contexts/authContexts/auth";
+
+// Pages
+import Records from "./Records";
+import Dashboard from "./dashboard";
+import AddRecords from "./addRecords"
 
 const App = () => {
   const { userLoggedIn } = (useAuth() as AuthContextType);
@@ -15,12 +18,13 @@ const App = () => {
   return (
     <div className={containerClass}>
       {userLoggedIn && <Sidebar />}
-      <div className="p-4">
+      <div className="py-4 px-12">
         <Routes>
           <Route path="/" element={userLoggedIn ? <Dashboard /> : <Login />} />
-          <Route path="/addRecordsCSV" element={userLoggedIn ? <AddRecordsCSV /> : <Login />} />
+          <Route path="/addRecords" element={userLoggedIn ? <AddRecords /> : <Login />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/records" element={<Records />} />
         </Routes>
       </div>
     </div>

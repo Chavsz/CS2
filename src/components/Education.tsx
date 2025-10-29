@@ -8,10 +8,7 @@ type Point = { year: number; xPctGraduates: number; yPctProfessionals: number }
 const Education = () => {
   const [eduRows, setEduRows] = useState<EducationRecord[]>([])
   const [occRows, setOccRows] = useState<OccupationData[]>([])
-  const [yearEdu, setYearEdu] = useState('')
-  const [totalEdu, setTotalEdu] = useState('')
-  const [gradsEdu, setGradsEdu] = useState('')
-  const [savingEdu, setSavingEdu] = useState(false)
+  
 
   useEffect(() => {
     (async () => {
@@ -53,47 +50,13 @@ const Education = () => {
     })
   }, [eduRows, occRows])
 
-  const addEdu = async (e: React.FormEvent) => {
-    e.preventDefault()
-    const year = parseInt(yearEdu, 10)
-    const total = parseInt(totalEdu, 10)
-    const graduates = gradsEdu ? parseInt(gradsEdu, 10) : undefined
-    if (Number.isNaN(year) || Number.isNaN(total)) return
-    setSavingEdu(true)
-    try {
-      await addEducation({ year, total, graduates })
-      setYearEdu('')
-      setTotalEdu('')
-      setGradsEdu('')
-      const e = await getEducations()
-      e.sort((a, b) => a.year - b.year)
-      setEduRows(e)
-    } finally {
-      setSavingEdu(false)
-    }
-  }
+  
 
   return (
     <div className="w-full">
       <h2 className="text-xl font-semibold text-gray-600 mb-3">Education vs Occupation: Scatter Plot</h2>
 
-      <form onSubmit={addEdu} className="flex items-end gap-3 mb-4">
-        <div className="flex flex-col">
-          <label className="text-sm text-gray-600">Year (Education)</label>
-          <input type="number" className="border border-gray-300 rounded-md px-2 py-1 w-32" value={yearEdu} onChange={(e) => setYearEdu(e.target.value)} required />
-        </div>
-        <div className="flex flex-col">
-          <label className="text-sm text-gray-600">Education Total</label>
-          <input type="number" className="border border-gray-300 rounded-md px-2 py-1 w-40" value={totalEdu} onChange={(e) => setTotalEdu(e.target.value)} required />
-        </div>
-        <div className="flex flex-col">
-          <label className="text-sm text-gray-600">Graduates (count)</label>
-          <input type="number" className="border border-gray-300 rounded-md px-2 py-1 w-40" value={gradsEdu} onChange={(e) => setGradsEdu(e.target.value)} />
-        </div>
-        <button type="submit" disabled={savingEdu} className="bg-blue-600 text-white rounded-md px-4 py-2 disabled:opacity-60">{savingEdu ? 'Saving...' : 'Add Education'}</button>
-        {/* Delete ALl */}
-        <button></button>
-      </form>
+      
 
       <div className="w-full h-[360px]">
         <ResponsiveContainer width="100%" height="100%">
@@ -117,28 +80,7 @@ const Education = () => {
           </ScatterChart>
         </ResponsiveContainer>
       </div>
-      {/* Data Table */}
-      <div className="mt-6">
-        <h3 className="text-lg font-semibold text-gray-600 mb-3">Education Records</h3>
-        <table className="w-full border-collapse border border-gray-300">
-          <thead>
-            <tr className="bg-gray-50">
-              <th className="p-3 border border-gray-300 text-left">Year</th>
-              <th className="p-3 border border-gray-300 text-left">College Graduates</th>
-              <th className="p-3 border border-gray-300 text-left">Total Education</th>
-            </tr>
-          </thead>
-          <tbody>
-            {eduRows.map(er => (
-              <tr key={er.year}>
-                <td className="p-3 border border-gray-300">{er.year}</td>
-                <td className="p-3 border border-gray-300">{(er.graduates ?? 0).toLocaleString()}</td>
-                <td className="p-3 border border-gray-300">{er.total.toLocaleString()}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      
       <p className="text-sm text-gray-500 mt-2">Each dot is a year; X = % of graduates out of all education totals, Y = % of professionals out of total occupation for that year.</p>
     </div>
   )

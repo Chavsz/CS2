@@ -7,7 +7,7 @@ function PlaceOfOrigin() {
   const [filteredData, setFilteredData] = useState<PlaceOfOriginData[]>([]);
   const [filterType, setFilterType] = useState<'year' | 'total'>('total');
   const [selectedYear, setSelectedYear] = useState<string>('');
-  const [showModal, setShowModal] = useState(false);
+  
   const [deleting, setDeleting] = useState(false)
   const [deleted, setDeleted] = useState(false)
   const [form, setForm] = useState({
@@ -56,69 +56,14 @@ function PlaceOfOrigin() {
     }
   }, [filterType, selectedYear, placeOfOriginData]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const handleAdd = async () => {
-    await addPlaceOfOrigin({
-      year: Number(form.year) || 0,
-      regionI: Number(form.regionI) || 0,
-      regionII: Number(form.regionII) || 0,
-      regionIII: Number(form.regionIII) || 0,
-      regionIVA: Number(form.regionIVA) || 0,
-      regionIVB: Number(form.regionIVB) || 0,
-      regionV: Number(form.regionV) || 0,
-      regionVI: Number(form.regionVI) || 0,
-      regionVII: Number(form.regionVII) || 0,
-      regionVIII: Number(form.regionVIII) || 0,
-      regionIX: Number(form.regionIX) || 0,
-      regionX: Number(form.regionX) || 0,
-      regionXI: Number(form.regionXI) || 0,
-      regionXII: Number(form.regionXII) || 0,
-      regionXIII: Number(form.regionXIII) || 0,
-      armm: Number(form.armm) || 0,
-      car: Number(form.car) || 0,
-      ncr: Number(form.ncr) || 0,
-      notReported: Number(form.notReported) || 0,
-    });
-    setForm({ 
-      year: "", 
-      regionI: "", 
-      regionII: "", 
-      regionIII: "", 
-      regionIVA: "", 
-      regionIVB: "", 
-      regionV: "", 
-      regionVI: "", 
-      regionVII: "", 
-      regionVIII: "", 
-      regionIX: "", 
-      regionX: "", 
-      regionXI: "", 
-      regionXII: "", 
-      regionXIII: "", 
-      armm: "", 
-      car: "", 
-      ncr: "", 
-      notReported: "" 
-    });
-    setShowModal(false);
-    fetchData();
-  };
+  
 
   const handleDelete = async (id: string) => {
     await deletePlaceOfOrigin(id);
     fetchData();
   };
 
-  const handleUpdate = async (id: string) => {
-    const newYear = prompt("Enter new year:");
-    if (newYear) {
-      await updatePlaceOfOrigin(id, { year: Number(newYear) });
-      fetchData();
-    }
-  };
+  
 
   // Compute totals for bar chart based on filtered data
   const totals = filteredData.reduce((acc, cur) => {
@@ -241,12 +186,7 @@ function PlaceOfOrigin() {
             >
               Total
             </button>
-            <button 
-              onClick={() => setShowModal(true)}
-              className="px-4 py-2 bg-green-500 text-white border-none rounded cursor-pointer"
-            >
-              Add Record
-            </button>
+            
             <button 
               onClick={onDeleteAll}
               disabled={deleting}
@@ -276,111 +216,9 @@ function PlaceOfOrigin() {
         </ResponsiveContainer>
       </div>
 
-      {/* Table */}
-      <table className="w-full border-collapse border border-gray-300">
-        <thead>
-          <tr className="bg-gray-50">
-            <th className="p-3 border border-gray-300 text-left">Year</th>
-            <th className="p-3 border border-gray-300 text-left">Region I</th>
-            <th className="p-3 border border-gray-300 text-left">Region II</th>
-            <th className="p-3 border border-gray-300 text-left">Region III</th>
-            <th className="p-3 border border-gray-300 text-left">Region IV-A</th>
-            <th className="p-3 border border-gray-300 text-left">Region IV-B</th>
-            <th className="p-3 border border-gray-300 text-left">Region V</th>
-            <th className="p-3 border border-gray-300 text-left">Region VI</th>
-            <th className="p-3 border border-gray-300 text-left">Region VII</th>
-            <th className="p-3 border border-gray-300 text-left">Region VIII</th>
-            <th className="p-3 border border-gray-300 text-left">Region IX</th>
-            <th className="p-3 border border-gray-300 text-left">Region X</th>
-            <th className="p-3 border border-gray-300 text-left">Region XI</th>
-            <th className="p-3 border border-gray-300 text-left">Region XII</th>
-            <th className="p-3 border border-gray-300 text-left">Region XIII</th>
-            <th className="p-3 border border-gray-300 text-left">ARMM</th>
-            <th className="p-3 border border-gray-300 text-left">CAR</th>
-            <th className="p-3 border border-gray-300 text-left">NCR</th>
-            <th className="p-3 border border-gray-300 text-left">Not Reported</th>
-            <th className="p-3 border border-gray-300 text-left">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredData.map(e => (
-            <tr key={e.id}>
-              <td className="p-3 border border-gray-300">{e.year || 0}</td>
-              <td className="p-3 border border-gray-300">{e.regionI || 0}</td>
-              <td className="p-3 border border-gray-300">{e.regionII || 0}</td>
-              <td className="p-3 border border-gray-300">{e.regionIII || 0}</td>
-              <td className="p-3 border border-gray-300">{e.regionIVA || 0}</td>
-              <td className="p-3 border border-gray-300">{e.regionIVB || 0}</td>
-              <td className="p-3 border border-gray-300">{e.regionV || 0}</td>
-              <td className="p-3 border border-gray-300">{e.regionVI || 0}</td>
-              <td className="p-3 border border-gray-300">{e.regionVII || 0}</td>
-              <td className="p-3 border border-gray-300">{e.regionVIII || 0}</td>
-              <td className="p-3 border border-gray-300">{e.regionIX || 0}</td>
-              <td className="p-3 border border-gray-300">{e.regionX || 0}</td>
-              <td className="p-3 border border-gray-300">{e.regionXI || 0}</td>
-              <td className="p-3 border border-gray-300">{e.regionXII || 0}</td>
-              <td className="p-3 border border-gray-300">{e.regionXIII || 0}</td>
-              <td className="p-3 border border-gray-300">{e.armm || 0}</td>
-              <td className="p-3 border border-gray-300">{e.car || 0}</td>
-              <td className="p-3 border border-gray-300">{e.ncr || 0}</td>
-              <td className="p-3 border border-gray-300">{e.notReported || 0}</td>
-              <td className="p-3 border border-gray-300">
-                <button 
-                  onClick={() => handleUpdate(e.id!)}
-                  className="mr-1 px-2 py-1 bg-yellow-400 text-black border-none rounded cursor-pointer"
-                >
-                  Update
-                </button>
-                <button 
-                  onClick={() => handleDelete(e.id!)}
-                  className="px-2 py-1 bg-red-500 text-white border-none rounded cursor-pointer"
-                >
-                  Delete
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      
 
-      {/* Modal for Add Record */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black/15 flex justify-center items-center z-50">
-          <div className="bg-white p-8 rounded-lg w-[600px] max-h-screen overflow-y-auto">
-            <h2 className="mb-5 text-center">Add New Place of Origin Record</h2>
-            <div className="grid grid-cols-3 gap-2">
-              {Object.keys(form).map(key => (
-                <div key={key}>
-                  <label className="block mb-1 font-bold">
-                    {key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1').trim()}
-                  </label>
-                  <input
-                    name={key}
-                    placeholder={key}
-                    value={form[key as keyof typeof form]}
-                    onChange={handleChange}
-                    className="w-full p-2 border border-gray-300 rounded box-border"
-                  />
-                </div>
-              ))}
-            </div>
-            <div className="flex justify-center gap-2 mt-5">
-              <button 
-                onClick={handleAdd}
-                className="px-5 py-2 bg-green-500 text-white border-none rounded cursor-pointer"
-              >
-                Add Record
-              </button>
-              <button 
-                onClick={() => setShowModal(false)}
-                className="px-5 py-2 bg-gray-500 text-white border-none rounded cursor-pointer"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      
     </div>
   );
 }

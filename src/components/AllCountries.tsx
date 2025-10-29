@@ -39,9 +39,7 @@ const CSV_NAME_ALIASES: Record<string, string> = {
 
 const AllCountries = () => {
   const [rows, setRows] = useState<CountryYearRecord[]>([])
-  const [iso3, setIso3] = useState('')
-  const [count, setCount] = useState('')
-  const [saving, setSaving] = useState(false)
+  
 
   useEffect(() => {
     (async () => {
@@ -108,52 +106,13 @@ const AllCountries = () => {
     return opts.sort((a, b) => a.label.localeCompare(b.label))
   }, [features])
 
-  const onAdd = async (e: React.FormEvent) => {
-    e.preventDefault()
-    const c = parseInt(count, 10)
-    if (!iso3 || Number.isNaN(c)) return
-    setSaving(true)
-    try {
-      await addCountryYear({ iso3: iso3.toUpperCase(), count: c })
-      setIso3('')
-      setCount('')
-      const r = await getCountryYears()
-      setRows(r)
-    } finally {
-      setSaving(false)
-    }
-  }
+  
 
   return (
     <div className="w-full">
       <h2 className="text-xl font-semibold text-gray-600 mb-3">World Choropleth: Total Counts by Country</h2>
 
-      <form onSubmit={onAdd} className="flex flex-wrap items-end gap-3 mb-4">
-        <div className="flex flex-col">
-          <label className="text-sm text-gray-600">Country</label>
-          <select
-            className="border border-gray-300 rounded-md px-2 py-1 min-w-64"
-            value={iso3 ? iso3 : ''}
-            onChange={(e) => setIso3(e.target.value)}
-          >
-            <option value="">Select a country…</option>
-            {countryOptions.map(opt => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
-            ))}
-          </select>
-        </div>
-        <div className="flex flex-col">
-          <label className="text-sm text-gray-600">ISO3 (e.g., USA, PHL)</label>
-          <input className="border border-gray-300 rounded-md px-2 py-1 w-32 uppercase" value={iso3} onChange={(e) => setIso3(e.target.value)} placeholder="PHL" required />
-        </div>
-        <div className="flex flex-col">
-          <label className="text-sm text-gray-600">Count</label>
-          <input type="number" className="border border-gray-300 rounded-md px-2 py-1 w-32" value={count} onChange={(e) => setCount(e.target.value)} required />
-        </div>
-        <button type="submit" disabled={saving} className="bg-blue-600 text-white rounded-md px-4 py-2 disabled:opacity-60">{saving ? 'Saving...' : 'Add'}</button>
-        {/* Delete All Records */}
-        <button></button>
-      </form>
+      
 
       <div className="w-full h-[520px]">
         {features && (

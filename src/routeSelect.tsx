@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 
 import * as mdIcons from "react-icons/md";
+import * as bsIcons from "react-icons/bs";
 
 const RouteSelect = () => {
   const [selected, setSelected] = useState(window.location.pathname);
@@ -19,14 +20,21 @@ const RouteSelect = () => {
         to="/"
         selected={selected}
         Icon={mdIcons.MdOutlineDashboard}
-        title="Total"
+        title="Dashboard"
         handleSelect={handleSelect}
       />
       <Route
-        to="/addRecordsCSV"
+        to="/addRecords"
         selected={selected}
-        Icon={mdIcons.MdCalendarMonth}
-        title="Add Records CSV"
+        Icon={mdIcons.MdAddChart}
+        title="Add Records"
+        handleSelect={handleSelect}
+      />
+      <Route
+        to="/records"
+        selected={selected}
+        Icon={bsIcons.BsClipboard2Data}
+        title="Records"
         handleSelect={handleSelect}
       />
     </div>

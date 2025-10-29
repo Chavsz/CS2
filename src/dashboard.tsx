@@ -14,7 +14,7 @@ const Dashboard = () => {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-500 mb-4">Dashboard</h1>
+      <h1 className="text-2xl font-bold text-green-600 mb-4">Dashboard</h1>
       <SelectData value={selected} onChange={setSelected} />
 
       {/* Render selected dataset component */}
