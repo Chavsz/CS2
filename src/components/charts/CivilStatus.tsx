@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts'
-import { getCivilStatuses, type CivilStatusRecord } from '../services/civilStatus'
+import { getCivilStatuses, type CivilStatusRecord } from '../../services/civilStatus'
 
 const CivilStatus = () => {
   const [data, setData] = useState<CivilStatusRecord[]>([])

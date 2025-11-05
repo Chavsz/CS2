@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ResponsiveContainer, ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts'
-import { getEducations, addEducation, type EducationRecord } from '../services/education'
-import { getOccupation, type OccupationData } from '../services/occupation'
+import { getEducations, addEducation, type EducationRecord } from '../../services/education'
+import { getOccupation, type OccupationData } from '../../services/occupation'
 
 type Point = { year: number; xPctGraduates: number; yPctProfessionals: number }
 

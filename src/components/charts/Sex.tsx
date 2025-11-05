@@ -16,7 +16,7 @@ import {
   deleteSex,
   type SexRecord,
   deleteAllSex,
-} from "../services/sex";
+} from "../../services/sex";
 
 const Sex = () => {
   const [data, setData] = useState<SexRecord[]>([]);

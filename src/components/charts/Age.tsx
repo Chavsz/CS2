@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts'
-import { getAges, type AgeRecord } from '../services/age'
+import { getAges, type AgeRecord } from '../../services/age'
 
 const Age = () => {
   const [data, setData] = useState<AgeRecord[]>([])

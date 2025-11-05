@@ -6,7 +6,7 @@ import {
   deleteOccupation,
   type OccupationData,
   deleteAllOccupation,
-} from "../services/occupation";
+} from "../../services/occupation";
 import {
   BarChart,
   Bar,

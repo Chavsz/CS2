@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import SelectData, { type DatasetKey } from './components/selectData'
-import Age from './components/Age'
-import AllCountries from './components/AllCountries'
-import MajorCountries from './components/MajorCountries'
-import Occupation from './components/Occupation'
-import Sex from './components/Sex'
-import CivilStatus from './components/CivilStatus'
-import Education from './components/Education'
-import PlaceOfOrigin from './components/PlaceOfOrigin'
+import Age from './components/charts/Age'
+import AllCountries from './components/charts/AllCountries'
+import MajorCountries from './components/charts/MajorCountries'
+import Occupation from './components/charts/Occupation'
+import Sex from './components/charts/Sex'
+import CivilStatus from './components/charts/CivilStatus'
+import Education from './components/charts/Education'
+import PlaceOfOrigin from './components/charts/PlaceOfOrigin'
 
 const Dashboard = () => {
   const [selected, setSelected] = useState<DatasetKey>('Age')
