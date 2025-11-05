@@ -100,9 +100,9 @@ const PlaceOfOriginTable = () => {
           <MdIcons.MdDelete /> {deletingAll ? "Deleting…" : "Delete All"}
         </button>
       </div>
-      <div className="">
-        <div className="rounded-lg border border-gray-300 overflow-hidden">
-          <table className="w-full border-collapse text-gray-600">
+      <div className="overflow-x-auto max-w-full">
+        <div className="rounded-lg border border-gray-300">
+          <table className="min-w-max border-collapse text-gray-600">
             <thead>
               <tr className="bg-slate-50">
                 <th className="p-3 text-left">Year</th>
@@ -133,37 +133,37 @@ const PlaceOfOriginTable = () => {
                 const start = (page - 1) * pageSize;
                 const end = Math.min(start + pageSize, total);
                 return filtered.slice(start, end).map((e) => (
-                <tr key={e.id}>
-                  <td className="p-1.5">{e.year || 0}</td>
-                  <td className="p-1.5">{e.regionI || 0}</td>
-                  <td className="p-1.5">{e.regionII || 0}</td>
-                  <td className="p-1.5">{e.regionIII || 0}</td>
-                  <td className="p-1.5">{e.regionIVA || 0}</td>
-                  <td className="p-1.5">{e.regionIVB || 0}</td>
-                  <td className="p-1.5">{e.regionV || 0}</td>
-                  <td className="p-1.5">{e.regionVI || 0}</td>
-                  <td className="p-1.5">{e.regionVII || 0}</td>
-                  <td className="p-1.5">{e.regionVIII || 0}</td>
-                  <td className="p-1.5">{e.regionIX || 0}</td>
-                  <td className="p-1.5">{e.regionX || 0}</td>
-                  <td className="p-1.5">{e.regionXI || 0}</td>
-                  <td className="p-1.5">{e.regionXII || 0}</td>
-                  <td className="p-1.5">{e.regionXIII || 0}</td>
-                  <td className="p-1.5">{e.armm || 0}</td>
-                  <td className="p-1.5">{e.car || 0}</td>
-                  <td className="p-1.5">{e.ncr || 0}</td>
-                  <td className="p-1.5">{e.notReported || 0}</td>
-                  <td className="p-1.5">
-                    <button
-                      onClick={() => onUpdate(e.id!)}
-                      className="mr-1 px-2 py-1 text-stone-900 hover:text-black cursor-pointer"><MdIcons.MdOutlineModeEdit />
-                    </button>
-                    <button
-                      onClick={() => onDelete(e.id!)}
-                      className="mr-1 px-2 py-1 text-red-500 hover:text-red-600 cursor-pointer"><MdIcons.MdDelete />
-                    </button>
-                  </td>
-                </tr>
+                  <tr key={e.id}>
+                    <td className="p-1.5">{e.year || 0}</td>
+                    <td className="p-1.5">{e.regionI || 0}</td>
+                    <td className="p-1.5">{e.regionII || 0}</td>
+                    <td className="p-1.5">{e.regionIII || 0}</td>
+                    <td className="p-1.5">{e.regionIVA || 0}</td>
+                    <td className="p-1.5">{e.regionIVB || 0}</td>
+                    <td className="p-1.5">{e.regionV || 0}</td>
+                    <td className="p-1.5">{e.regionVI || 0}</td>
+                    <td className="p-1.5">{e.regionVII || 0}</td>
+                    <td className="p-1.5">{e.regionVIII || 0}</td>
+                    <td className="p-1.5">{e.regionIX || 0}</td>
+                    <td className="p-1.5">{e.regionX || 0}</td>
+                    <td className="p-1.5">{e.regionXI || 0}</td>
+                    <td className="p-1.5">{e.regionXII || 0}</td>
+                    <td className="p-1.5">{e.regionXIII || 0}</td>
+                    <td className="p-1.5">{e.armm || 0}</td>
+                    <td className="p-1.5">{e.car || 0}</td>
+                    <td className="p-1.5">{e.ncr || 0}</td>
+                    <td className="p-1.5">{e.notReported || 0}</td>
+                    <td className="p-1.5">
+                      <button
+                        onClick={() => onUpdate(e.id!)}
+                        className="mr-1 px-2 py-1 text-stone-900 hover:text-black cursor-pointer"><MdIcons.MdOutlineModeEdit />
+                      </button>
+                      <button
+                        onClick={() => onDelete(e.id!)}
+                        className="mr-1 px-2 py-1 text-red-500 hover:text-red-600 cursor-pointer"><MdIcons.MdDelete />
+                      </button>
+                    </td>
+                  </tr>
                 ))
               })()}
             </tbody>
@@ -171,6 +171,7 @@ const PlaceOfOriginTable = () => {
         </div>
         <Pagination total={filtered.length} page={page} pageSize={pageSize} onPageChange={setPage} />
       </div>
+      {/* *** END OF CHANGES *** */}
     </div>
   );
 };

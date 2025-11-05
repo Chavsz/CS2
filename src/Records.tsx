@@ -10,7 +10,7 @@ import AllCountriesTable from './components/records/allCountriesData'
 import CivilStatusTable from './components/records/civilstatusData'
 
 const Records = () => {
-  const [selected, setSelected] = useState<DatasetKey>('Sex')
+  const [selected, setSelected] = useState<DatasetKey>('Age')
 
   return (
     <div>
