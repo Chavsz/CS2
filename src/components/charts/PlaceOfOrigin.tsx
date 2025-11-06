@@ -211,7 +211,7 @@ function PlaceOfOrigin() {
             <XAxis dataKey="region" angle={-45} textAnchor="end" height={100} />
             <YAxis />
             <Tooltip />
-            <Bar dataKey="count" fill="#8884d8" />
+            <Bar dataKey="count" fill="#16a34a" />
           </BarChart>
         </ResponsiveContainer>
       </div>

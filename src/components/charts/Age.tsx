@@ -27,7 +27,7 @@ const Age = () => {
           <YAxis tick={{ fontSize: 12 }} />
           <Tooltip formatter={(v: number) => v.toLocaleString()} labelFormatter={(l) => `Year: ${l}`} />
           <Legend />
-          <Line type="monotone" dataKey="total" name="Total" stroke="#8884d8" strokeWidth={2} dot={false} />
+          <Line type="monotone" dataKey="total" name="Total" stroke="#16a34a" strokeWidth={2} dot={false} />
           </LineChart>
         </ResponsiveContainer>
       </div>

@@ -26,12 +26,12 @@ const CivilStatus = () => {
             <YAxis tick={{ fontSize: 12 }} />
             <Tooltip formatter={(v: number) => v.toLocaleString()} labelFormatter={(l) => `Year: ${l}`} />
             <Legend />
-            <Bar dataKey="single" name="Single" stackId="a" fill="#60a5fa" />
-            <Bar dataKey="married" name="Married" stackId="a" fill="#34d399" />
-            <Bar dataKey="widower" name="Widower" stackId="a" fill="#f59e0b" />
-            <Bar dataKey="separated" name="Separated" stackId="a" fill="#ef4444" />
-            <Bar dataKey="divorced" name="Divorced" stackId="a" fill="#a78bfa" />
-            <Bar dataKey="notReported" name="Not Reported" stackId="a" fill="#94a3b8" />
+            <Bar dataKey="single" name="Single" stackId="a" fill="#5C8148" />
+            <Bar dataKey="married" name="Married" stackId="a" fill="#76A45B" />
+            <Bar dataKey="widower" name="Widower" stackId="a" fill="#8BB650" />
+            <Bar dataKey="separated" name="Separated" stackId="a" fill="#A1C181" />
+            <Bar dataKey="divorced" name="Divorced" stackId="a" fill="#D6EC89" />
+            <Bar dataKey="notReported" name="Not Reported" stackId="a" fill="B3E093" />
           </BarChart>
         </ResponsiveContainer>
       </div>

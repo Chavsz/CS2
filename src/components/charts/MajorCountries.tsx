@@ -180,7 +180,7 @@ function MajorCountries() {
             <YAxis />
             <Tooltip />
             <Legend />
-            <Bar dataKey="count" fill="#8884d8" />
+            <Bar dataKey="count" fill="#16a34a" />
           </BarChart>
         </ResponsiveContainer>
       </div>

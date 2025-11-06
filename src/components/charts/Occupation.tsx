@@ -341,7 +341,7 @@ function Occupation() {
                 borderRadius: "6px",
               }}
             />
-            <Bar dataKey="count" fill="#3b82f6" radius={[2, 2, 0, 0]} />
+            <Bar dataKey="count" fill="#16a34a" radius={[2, 2, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>

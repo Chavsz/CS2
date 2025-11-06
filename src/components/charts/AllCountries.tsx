@@ -120,7 +120,18 @@ const AllCountries = () => {
           data={data}
           features={features}
           margin={{ top: 10, right: 20, bottom: 10, left: 20 }}
-          colors="nivo"
+          colors={[
+            '#e9f5ec',
+            '#c8ebd5',
+            '#a3dfbb',
+            '#7cd29f',
+            '#55c684',
+            '#34b46b',
+            '#16a34a',
+            '#14833d',
+            '#0f6731',
+            '#0a4a24',
+          ]}
           domain={[0, Math.max(1, ...data.map(d => d.value))]}
           unknownColor="#eeeeee"
           label="properties.name"
