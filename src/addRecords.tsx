@@ -1,24 +1,21 @@
 import { useState } from "react";
-import { addAge, deleteAllAges, type AgeRecord } from "./services/age";
+import { addAge, deleteAllAges, } from "./services/age";
 import {
   addMajorCountries,
   deleteAllMajorCountries,
 } from "./services/majorCountries";
-import { addSex, deleteAllSex, type SexRecord } from "./services/sex";
+import { addSex, deleteAllSex, } from "./services/sex";
 import {
   addPlaceOfOrigin,
   deleteAllPlaceOfOrigin,
-  type PlaceOfOriginData,
 } from "./services/placeOfOrigin";
 import {
   addOccupation,
   deleteAllOccupation,
-  type OccupationData,
 } from "./services/occupation";
 import {
   addEducation,
   deleteAllEducation,
-  type EducationRecord,
 } from "./services/education";
 import { addCountryYear, deleteAllCountryYears } from "./services/allCountries";
 import {
@@ -35,7 +32,6 @@ import {
 import {
   addCivilStatus,
   deleteAllCivilStatus,
-  type CivilStatusRecord,
 } from "./services/civilStatus";
 
 // Icon components

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ResponsiveChoropleth } from '@nivo/geo'
-import { addCountryYear, getCountryYears, type CountryYearRecord } from '../../services/allCountries'
+import { getCountryYears, type CountryYearRecord } from '../../services/allCountries'
 
 type NivoDatum = { id: string; value: number }
 
