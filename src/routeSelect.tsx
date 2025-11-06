@@ -17,7 +17,7 @@ const RouteSelect = () => {
         MENU
       </p>
       <Route
-        to="/"
+        to="/CS2"
         selected={selected}
         Icon={mdIcons.MdOutlineDashboard}
         title="Dashboard"

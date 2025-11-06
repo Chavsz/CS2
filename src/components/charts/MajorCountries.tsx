@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { addMajorCountries, getMajorCountries, updateMajorCountries, deleteMajorCountries, deleteAllMajorCountries } from '../../services/majorCountries';
+import { getMajorCountries, deleteAllMajorCountries } from '../../services/majorCountries';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, CartesianGrid, ResponsiveContainer } from 'recharts';
 
 type MajorCountries = {

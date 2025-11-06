@@ -1,11 +1,7 @@
 import { useEffect, useState } from "react";
 import {
-  addOccupation,
   getOccupation,
-  updateOccupation,
-  deleteOccupation,
   type OccupationData,
-  deleteAllOccupation,
 } from "../../services/occupation";
 import {
   BarChart,

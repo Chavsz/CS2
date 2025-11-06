@@ -20,7 +20,7 @@ const App = () => {
       {userLoggedIn && <Sidebar />}
       <div className="py-4 px-12">
         <Routes>
-          <Route path="/" element={userLoggedIn ? <Dashboard /> : <Login />} />
+          <Route path="/CS2" element={userLoggedIn ? <Dashboard /> : <Login />} />
           <Route path="/addRecords" element={userLoggedIn ? <AddRecords /> : <Login />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />

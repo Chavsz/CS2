@@ -11,7 +11,6 @@ import {
 } from "recharts";
 import {
   getEducations,
-  addEducation,
   type EducationRecord,
 } from "../../services/education";
 import { getOccupation, type OccupationData } from "../../services/occupation";

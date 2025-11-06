@@ -38,7 +38,7 @@ const Login = () => {
     }
   };
 
-  if (userLoggedIn) return <Navigate to={"/"} replace={true} />;
+  if (userLoggedIn) return <Navigate to={"/CS2"} replace={true} />;
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-[#f7fffa]">

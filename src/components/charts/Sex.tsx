@@ -11,11 +11,7 @@ import {
 } from "recharts";
 import {
   getSexes,
-  addSex,
-  updateSex,
-  deleteSex,
   type SexRecord,
-  deleteAllSex,
 } from "../../services/sex";
 
 const Sex = () => {
