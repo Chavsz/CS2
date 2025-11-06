@@ -64,7 +64,7 @@ const CivilStatusTable = () => {
           <MdIcons.MdDelete /> {deletingAll ? "Deleting…" : "Delete All"}
         </button>
       </div>
-      <div className="px-10">
+      <div className="px-9">
         <div className="rounded-lg border border-gray-300 overflow-hidden">
           <table className="w-full border-collapse text-gray-600">
             <thead>

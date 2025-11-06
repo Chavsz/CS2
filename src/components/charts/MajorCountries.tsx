@@ -25,20 +25,6 @@ function MajorCountries() {
   const [selectedYear, setSelectedYear] = useState<string>('');
   
   const [deleting, setDeleting] = useState(false);
-  const [form, setForm] = useState({
-    year: "",
-    Usa: "",
-    Canada: "",
-    Japan: "",
-    Australia: "",
-    Italy: "",
-    NewZealand: "",
-    UnitedKingdom: "",
-    Germany: "",
-    SouthKorea: "",
-    Spain: "",
-    Others: "",
-  });
 
   // Fetch data
   const fetchData = async () => {
@@ -63,15 +49,6 @@ function MajorCountries() {
       setFilteredData(majorCountries);
     }
   }, [filterType, selectedYear, majorCountries]);
-
-  
-
-  const handleDelete = async (id: string) => {
-    await deleteMajorCountries(id);
-    fetchData();
-  };
-
-  
 
   // Compute totals for bar chart based on filtered data
   const totals = filteredData.reduce((acc, cur) => {

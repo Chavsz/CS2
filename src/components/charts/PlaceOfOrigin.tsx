@@ -142,7 +142,7 @@ function PlaceOfOrigin() {
   }
   
   return (
-    <div className="p-5">
+    <div>
       {/* Filter Controls */}
       <div className="flex justify-between items-center mb-5">
         <div className="flex items-center gap-5">
@@ -208,7 +208,7 @@ function PlaceOfOrigin() {
         <ResponsiveContainer width="100%" height={400}>
           <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="region" angle={-45} textAnchor="end" height={100} />
+            <XAxis dataKey="region" angle={-45} textAnchor="end" height={120} tick={{ fontSize: 14 }} />
             <YAxis />
             <Tooltip />
             <Bar dataKey="count" fill="#16a34a" />

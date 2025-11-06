@@ -18,6 +18,7 @@ const CivilStatus = () => {
     <div className="w-full">
       <h2 className="text-xl font-semibold text-gray-600 mb-3">Civil Status: Distribution by Year</h2>
 
+      <div className="mb-8 bg-white border border-gray-300 rounded py-4 px-3">
       <div className="w-full h-[360px]">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
@@ -34,6 +35,7 @@ const CivilStatus = () => {
             <Bar dataKey="notReported" name="Not Reported" stackId="a" fill="B3E093" />
           </BarChart>
         </ResponsiveContainer>
+      </div>
       </div>
     </div>
   )

@@ -38,7 +38,7 @@ const EducationTable = () => {
         <div className="mb-3">
           <button onClick={onDeleteAll} disabled={deletingAll} className="px-2.5 py-2 bg-red-500 text-white rounded disabled:opacity-60 flex items-center gap-1.5"> <MdIcons.MdDelete />{deletingAll?'Deleting…':'Delete All'}</button>
         </div>
-        <div className="px-10">
+        <div className="px-9">
           <div className="rounded-lg border border-gray-300 overflow-hidden">
             <table className="w-full border-collapse text-gray-600">
               <thead>

@@ -25,27 +25,6 @@ function Occupation() {
   const [categoryFilter, setCategoryFilter] = useState<
     "all" | "employed" | "unemployed"
   >("all");
-  
-  const [deleting, setDeleting] = useState(false);
-  const [deleted, setDeleted] = useState(false);
-  const [form, setForm] = useState({
-    year: "",
-    professionalTechnical: "",
-    managerialExecutive: "",
-    clericalWorkers: "",
-    salesWorkers: "",
-    serviceWorkers: "",
-    agriculturalWorkers: "",
-    productionTransportLaborers: "",
-    armedForces: "",
-    housewives: "",
-    retirees: "",
-    students: "",
-    minors: "",
-    outOfSchoolYouth: "",
-    refugees: "",
-    noOccupationReported: "",
-  });
 
   // Fetch data
   const fetchData = async () => {
@@ -74,15 +53,6 @@ function Occupation() {
       setFilteredData(occupationData);
     }
   }, [filterType, selectedYear, occupationData]);
-
-  
-
-  const handleDelete = async (id: string) => {
-    await deleteOccupation(id);
-    fetchData();
-  };
-
-  
 
   // Compute totals for histogram based on filtered data
   const totals = filteredData.reduce(
@@ -193,19 +163,6 @@ function Occupation() {
 
   const chartData = getHistogramData();
 
-  const onDeleteAll = async () => {
-    setDeleting(true);
-    try {
-      alert("Deleting all place of origin data...");
-      await deleteAllOccupation();
-      await fetchData();
-      setDeleted(true);
-    } finally {
-      setDeleting(false);
-      setDeleted(false);
-    }
-  };
-
   return (
     <div className="">
       {/* Filter Controls */}
@@ -247,15 +204,6 @@ function Occupation() {
               }`}
             >
               Total
-            </button>
-            
-            {/* Delete ALL Record */}
-            <button
-              onClick={onDeleteAll}
-              disabled={deleting}
-              className="px-4 py-2 bg-red-500 text-white border-none rounded cursor-pointer disabled:opacity-60"
-            >
-              {deleting ? "Deleting..." : "Delete All"}
             </button>
           </div>
         </div>
@@ -346,9 +294,6 @@ function Occupation() {
         </ResponsiveContainer>
       </div>
 
-      
-
-      
     </div>
   );
 }
