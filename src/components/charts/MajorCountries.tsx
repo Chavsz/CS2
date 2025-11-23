@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getMajorCountries, deleteAllMajorCountries } from '../../services/majorCountries';
+import { getMajorCountries } from '../../services/majorCountries';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, CartesianGrid, ResponsiveContainer } from 'recharts';
 
 type MajorCountries = {
@@ -23,8 +23,6 @@ function MajorCountries() {
   const [filteredData, setFilteredData] = useState<MajorCountries[]>([]);
   const [filterType, setFilterType] = useState<'year' | 'total'>('total');
   const [selectedYear, setSelectedYear] = useState<string>('');
-  
-  const [deleting, setDeleting] = useState(false);
 
   // Fetch data
   const fetchData = async () => {
@@ -80,13 +78,6 @@ function MajorCountries() {
     { category: "Others", count: totals.Others },
   ];
 
-  const onDeleteAll = async () => {
-    setDeleting(true);
-    await deleteAllMajorCountries();
-    await fetchData();
-    setDeleting(false);
-  };
-
   return (
     <div className="p-5">
       {/* Header */}
@@ -130,15 +121,6 @@ function MajorCountries() {
             >
               Total
             </button>
-            
-            {/* Delete All Records */}
-            <button
-              onClick={onDeleteAll}
-              disabled={deleting}
-              className="px-4 py-2 bg-red-500 text-white border-none rounded cursor-pointer disabled:opacity-60"
-            >
-              {deleting ? 'Deleting...' : 'Delete All Records'}
-            </button>
           </div>
         </div>
       </div>
@@ -157,7 +139,7 @@ function MajorCountries() {
             <YAxis />
             <Tooltip />
             <Legend />
-            <Bar dataKey="count" fill="#16a34a" />
+            <Bar dataKey="count" fill="#3949AB" />
           </BarChart>
         </ResponsiveContainer>
       </div>

@@ -13,8 +13,8 @@ import AddRecords from "./addRecords"
 const App = () => {
   const { userLoggedIn } = (useAuth() as AuthContextType);
   const containerClass = userLoggedIn
-    ? "grid grid-cols-[80px_1fr] md:grid-cols-[240px_1fr] transition-width duration-300 bg-white min-h-screen"
-    : "bg-white min-h-screen";
+    ? "grid grid-cols-[80px_1fr] md:grid-cols-[240px_1fr] transition-width duration-300 bg-[#fafafc] min-h-screen"
+    : "bg-[#fafafc] min-h-screen";
   return (
     <div className={containerClass}>
       {userLoggedIn && <Sidebar />}

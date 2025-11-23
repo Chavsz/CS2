@@ -126,7 +126,7 @@ const Education = () => {
                 }}
               />
               <Legend />
-              <Scatter name="Year" data={points} fill="#16a34a" />
+              <Scatter name="Year" data={points} fill="#3949AB" />
             </ScatterChart>
           </ResponsiveContainer>
         </div>

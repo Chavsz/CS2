@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { addPlaceOfOrigin, getPlaceOfOrigin, updatePlaceOfOrigin, deletePlaceOfOrigin, type PlaceOfOriginData, deleteAllPlaceOfOrigin } from '../../services/placeOfOrigin';
+import { getPlaceOfOrigin, deletePlaceOfOrigin, type PlaceOfOriginData, deleteAllPlaceOfOrigin } from '../../services/placeOfOrigin';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts';
 
 function PlaceOfOrigin() {
@@ -7,30 +7,6 @@ function PlaceOfOrigin() {
   const [filteredData, setFilteredData] = useState<PlaceOfOriginData[]>([]);
   const [filterType, setFilterType] = useState<'year' | 'total'>('total');
   const [selectedYear, setSelectedYear] = useState<string>('');
-  
-  const [deleting, setDeleting] = useState(false)
-  const [deleted, setDeleted] = useState(false)
-  const [form, setForm] = useState({
-    year: "",
-    regionI: "",
-    regionII: "",
-    regionIII: "",
-    regionIVA: "",
-    regionIVB: "",
-    regionV: "",
-    regionVI: "",
-    regionVII: "",
-    regionVIII: "",
-    regionIX: "",
-    regionX: "",
-    regionXI: "",
-    regionXII: "",
-    regionXIII: "",
-    armm: "",
-    car: "",
-    ncr: "",
-    notReported: "",
-  });
 
   // Fetch data
   const fetchData = async () => {
@@ -55,15 +31,6 @@ function PlaceOfOrigin() {
       setFilteredData(placeOfOriginData);
     }
   }, [filterType, selectedYear, placeOfOriginData]);
-
-  
-
-  const handleDelete = async (id: string) => {
-    await deletePlaceOfOrigin(id);
-    fetchData();
-  };
-
-  
 
   // Compute totals for bar chart based on filtered data
   const totals = filteredData.reduce((acc, cur) => {
@@ -128,19 +95,6 @@ function PlaceOfOrigin() {
     { region: "Not Reported", count: totals.notReported },
   ];
 
-  const onDeleteAll = async () => {
-    setDeleting(true)
-    try {
-      alert('Deleting all place of origin data...')
-      await deleteAllPlaceOfOrigin()
-      await fetchData();
-      setDeleted(true)
-    } finally {
-      setDeleting(false)
-      setDeleted(false)
-    }
-  }
-  
   return (
     <div>
       {/* Filter Controls */}
@@ -186,14 +140,6 @@ function PlaceOfOrigin() {
             >
               Total
             </button>
-            
-            <button 
-              onClick={onDeleteAll}
-              disabled={deleting}
-              className="px-4 py-2 bg-red-500 text-white border-none rounded cursor-pointer disabled:opacity-60"
-            >
-              {deleting ? 'Deleting...' : 'Delete All'}
-            </button>
           </div>
         </div>
       </div>
@@ -211,14 +157,10 @@ function PlaceOfOrigin() {
             <XAxis dataKey="region" angle={-45} textAnchor="end" height={120} tick={{ fontSize: 14 }} />
             <YAxis />
             <Tooltip />
-            <Bar dataKey="count" fill="#16a34a" />
+            <Bar dataKey="count" fill="#3949AB" />
           </BarChart>
         </ResponsiveContainer>
       </div>
-
-      
-
-      
     </div>
   );
 }

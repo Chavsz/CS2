@@ -500,7 +500,7 @@ const AddRecords = () => {
   return (
     <div className="max-w-[1400px]">
       <div className="mb-10">
-        <h1 className="text-2xl font-bold text-green-600 mb-2">Add Records</h1>
+        <h1 className="text-2xl font-bold text-indigo-600 mb-2">Add Records</h1>
         <p className="text-[15px] text-gray-600">Upload CSV files or add records manually for different categories</p>
       </div>
 

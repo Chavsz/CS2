@@ -121,16 +121,16 @@ const AllCountries = () => {
           features={features}
           margin={{ top: 10, right: 20, bottom: 10, left: 20 }}
           colors={[
-            '#e9f5ec',
-            '#c8ebd5',
-            '#a3dfbb',
-            '#7cd29f',
-            '#55c684',
-            '#34b46b',
-            '#16a34a',
-            '#14833d',
-            '#0f6731',
-            '#0a4a24',
+            '#eef2ff',
+            '#e0e7ff',
+            '#c7d2fe',
+            '#a5b4fc',
+            '#818cf8',
+            '#6366f1',
+            '#4f46e5',
+            '#4338ca',
+            '#3730a3',
+            '#312e81',
           ]}
           domain={[0, Math.max(1, ...data.map(d => d.value))]}
           unknownColor="#eeeeee"

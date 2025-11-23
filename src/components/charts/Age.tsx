@@ -48,7 +48,7 @@ const Age = () => {
                 type="monotone"
                 dataKey="total"
                 name="Total"
-                stroke="#16a34a"
+                stroke="#3949AB"
                 strokeWidth={2}
                 dot={false}
               />

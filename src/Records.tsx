@@ -14,7 +14,7 @@ const Records = () => {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-green-600 mb-4">Records</h1>
+      <h1 className="text-2xl font-bold text-indigo-600 mb-4">Records</h1>
       <SelectData value={selected} onChange={setSelected} />
 
       <div className="mt-4">
