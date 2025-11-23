@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import SelectData, { type DatasetKey } from './components/selectData'
+import { useSearchParams } from 'react-router-dom'
+import { type DatasetKey } from './components/selectData'
 import SexTable from './components/records/sexData'
 import MajorCountriesTable from './components/records/majorCountriesData'
 import OccupationTable from './components/records/occupationData'
@@ -10,12 +10,12 @@ import AllCountriesTable from './components/records/allCountriesData'
 import CivilStatusTable from './components/records/civilstatusData'
 
 const Records = () => {
-  const [selected, setSelected] = useState<DatasetKey>('Age')
+  const [searchParams] = useSearchParams()
+  const selected = (searchParams.get('dataset') || 'Age') as DatasetKey
 
   return (
-    <div>
+    <div className="py-4 px-8">
       <h1 className="text-2xl font-bold text-indigo-600 mb-4">Records</h1>
-      <SelectData value={selected} onChange={setSelected} />
 
       <div className="mt-4">
       {selected === 'Age' && <AgeTable />}

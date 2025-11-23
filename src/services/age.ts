@@ -6,7 +6,21 @@ const ageCollection = collection(db, 'age')
 export type AgeRecord = {
   id?: string;
   year: number;
-  total: number;
+  age14Below: number;
+  age15to19: number;
+  age20to24: number;
+  age25to29: number;
+  age30to34: number;
+  age35to39: number;
+  age40to44: number;
+  age45to49: number;
+  age50to54: number;
+  age55to59: number;
+  age60to64: number;
+  age65to69: number;
+  age70Above: number;
+  notReported: number;
+  total?: number; // Computed field for total per year
 }
 
 export const addAge = async (data: Omit<AgeRecord, 'id'>) => {

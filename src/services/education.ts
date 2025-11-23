@@ -6,10 +6,21 @@ const educationCollection = collection(db, 'education')
 export type EducationRecord = {
   id?: string;
   year: number;
-  // store a single total to keep scatter simple; you can change later
+  notOfSchoolingAge: number;
+  noFormalEducation: number;
+  elementaryLevel: number;
+  elementaryGraduate: number;
+  highSchoolLevel: number;
+  highSchoolGraduate: number;
+  vocationalLevel: number;
+  vocationalGraduate: number;
+  collegeLevel: number;
+  collegeGraduate: number;
+  postGraduateLevel: number;
+  postGraduate: number;
+  nonFormalEducation: number;
+  notReported: number;
   total: number;
-  // number of graduates for the same year (used for percent calc)
-  graduates?: number;
 }
 
 export const addEducation = async (data: Omit<EducationRecord, 'id'>) => {

@@ -198,7 +198,7 @@ const AddRecords = () => {
   const [occupationForm, setOccupationForm] = useState({ year: "", professionalTechnical: "", managerialExecutive: "", clericalWorkers: "", salesWorkers: "", serviceWorkers: "", agriculturalWorkers: "", productionTransportLaborers: "", armedForces: "", housewives: "", retirees: "", students: "", minors: "", outOfSchoolYouth: "", refugees: "", noOccupationReported: "" });
   const [sexForm, setSexForm] = useState({ year: "", male: "", female: "" });
   const [civilForm, setCivilForm] = useState({ year: "", single: "", married: "", widower: "", separated: "", divorced: "", notReported: "" });
-  const [educationForm, setEducationForm] = useState({ year: "", total: "", graduates: "" });
+  const [educationForm, setEducationForm] = useState({ year: "", total: "" });
   const [placeForm, setPlaceForm] = useState({ year: "", regionI: "", regionII: "", regionIII: "", regionIVA: "", regionIVB: "", regionV: "", regionVI: "", regionVII: "", regionVIII: "", regionIX: "", regionX: "", regionXI: "", regionXII: "", regionXIII: "", armm: "", car: "", ncr: "", notReported: "" });
 
 
@@ -498,7 +498,7 @@ const AddRecords = () => {
   };
 
   return (
-    <div className="max-w-[1400px]">
+    <div className="py-4 px-8" >
       <div className="mb-10">
         <h1 className="text-2xl font-bold text-indigo-600 mb-2">Add Records</h1>
         <p className="text-[15px] text-gray-600">Upload CSV files or add records manually for different categories</p>
@@ -715,16 +715,29 @@ const AddRecords = () => {
       {showEducationModal && (
         <Modal title="Add Education Record" onClose={() => setShowEducationModal(false)}>
           <SimpleForm 
-            fields={[{name:'year',label:'Year'},{name:'total',label:'Total'},{name:'graduates',label:'College Graduates (optional)'}]} 
+            fields={[{name:'year',label:'Year'},{name:'total',label:'Total'}]} 
             values={educationForm} 
             setValues={setEducationForm} 
             onSubmit={async () => { 
               await addEducation({ 
                 year:Number(educationForm.year)||0, 
-                total:Number(educationForm.total)||0, 
-                graduates: educationForm.graduates ? Number(educationForm.graduates) : undefined 
+                total:Number(educationForm.total)||0,
+                notOfSchoolingAge: 0,
+                noFormalEducation: 0,
+                elementaryLevel: 0,
+                elementaryGraduate: 0,
+                highSchoolLevel: 0,
+                highSchoolGraduate: 0,
+                vocationalLevel: 0,
+                vocationalGraduate: 0,
+                collegeLevel: 0,
+                collegeGraduate: 0,
+                postGraduateLevel: 0,
+                postGraduate: 0,
+                nonFormalEducation: 0,
+                notReported: 0
               }); 
-              setEducationForm({ year:'', total:'', graduates:'' }); 
+              setEducationForm({ year:'', total:'' }); 
               setShowEducationModal(false); 
             }} 
           />

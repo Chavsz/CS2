@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ResponsiveContainer,
-  ScatterChart,
-  Scatter,
+  LineChart,
+  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -13,128 +13,147 @@ import {
   getEducations,
   type EducationRecord,
 } from "../../services/education";
-import { getOccupation, type OccupationData } from "../../services/occupation";
 
-type Point = { year: number; xPctGraduates: number; yPctProfessionals: number };
+// Color palette for education categories
+const getEducationColors = (): { [key: string]: string } => {
+  const colors = [
+    "#ef4444", "#ec4899", "#a855f7", "#2563eb", "#f97316", "#22c55e",
+    "#16a34a", "#84cc16", "#9333ea", "#3b82f6", "#eab308", "#14b8a6",
+    "#3949AB", "#f59e0b"
+  ];
+  
+  const educationKeys = [
+    "notOfSchoolingAge",
+    "noFormalEducation",
+    "elementaryLevel",
+    "elementaryGraduate",
+    "highSchoolLevel",
+    "highSchoolGraduate",
+    "vocationalLevel",
+    "vocationalGraduate",
+    "collegeLevel",
+    "collegeGraduate",
+    "postGraduateLevel",
+    "postGraduate",
+    "nonFormalEducation",
+    "notReported",
+  ];
+  
+  const colorMap: { [key: string]: string } = {};
+  educationKeys.forEach((key, index) => {
+    colorMap[key] = colors[index % colors.length];
+  });
+  
+  return colorMap;
+};
 
 const Education = () => {
-  const [eduRows, setEduRows] = useState<EducationRecord[]>([]);
-  const [occRows, setOccRows] = useState<OccupationData[]>([]);
+  const [data, setData] = useState<EducationRecord[]>([]);
 
   useEffect(() => {
     (async () => {
-      const [e, o] = await Promise.all([getEducations(), getOccupation()]);
-      e.sort((a, b) => a.year - b.year);
-      o.sort((a, b) => a.year - b.year);
-      setEduRows(e);
-      setOccRows(o);
+      const rows = await getEducations();
+      // Ensure sorted by year for the line chart
+      rows.sort((a, b) => a.year - b.year);
+      setData(rows);
     })();
   }, []);
 
-  const points = useMemo<Point[]>(() => {
-    const occTotalsByYear = new Map<
-      number,
-      { professionals: number; total: number }
-    >();
-    for (const r of occRows) {
-      const professionals =
-        r.armedForces +
-        r.productionTransportLaborers +
-        r.agriculturalWorkers +
-        r.serviceWorkers +
-        r.salesWorkers +
-        r.managerialExecutive +
-        r.clericalWorkers +
-        r.professionalTechnical;
-      const unemployed =
-        r.housewives +
-        r.retirees +
-        r.students +
-        r.minors +
-        r.outOfSchoolYouth +
-        r.refugees +
-        r.noOccupationReported;
-      const employedOther =
-        r.professionalTechnical +
-        r.managerialExecutive +
-        r.clericalWorkers +
-        r.salesWorkers +
-        r.serviceWorkers +
-        r.agriculturalWorkers +
-        r.productionTransportLaborers +
-        r.armedForces -
-        professionals;
-      const employedTotal = professionals + employedOther;
-      const total = employedTotal + unemployed;
-      occTotalsByYear.set(r.year, { professionals, total });
-    }
+  // Education category labels
+  const educationLabels: { [key: string]: string } = {
+    notOfSchoolingAge: "Not of Schooling Age",
+    noFormalEducation: "No Formal Education",
+    elementaryLevel: "Elementary Level",
+    elementaryGraduate: "Elementary Graduate",
+    highSchoolLevel: "High School Level",
+    highSchoolGraduate: "High School Graduate",
+    vocationalLevel: "Vocational Level",
+    vocationalGraduate: "Vocational Graduate",
+    collegeLevel: "College Level",
+    collegeGraduate: "College Graduate",
+    postGraduateLevel: "Post Graduate Level",
+    postGraduate: "Post Graduate",
+    nonFormalEducation: "Non-Formal Education",
+    notReported: "Not Reported / No Response",
+  };
 
-    return eduRows.map((er) => {
-      const occ = occTotalsByYear.get(er.year);
-      if (!occ || occ.total === 0)
-        return { year: er.year, xPctGraduates: 0, yPctProfessionals: 0 };
-      const denom = er.total || 0;
-      const xPctGraduates = denom > 0 ? ((er.graduates ?? 0) / denom) * 100 : 0;
-      const yPctProfessionals = (occ.professionals / occ.total) * 100;
-      return { year: er.year, xPctGraduates, yPctProfessionals };
-    });
-  }, [eduRows, occRows]);
+  const educationKeys = [
+    "notOfSchoolingAge",
+    "noFormalEducation",
+    "elementaryLevel",
+    "elementaryGraduate",
+    "highSchoolLevel",
+    "highSchoolGraduate",
+    "vocationalLevel",
+    "vocationalGraduate",
+    "collegeLevel",
+    "collegeGraduate",
+    "postGraduateLevel",
+    "postGraduate",
+    "nonFormalEducation",
+    "notReported",
+  ];
+
+  // Get colors for each education category
+  const educationColors = getEducationColors();
 
   return (
     <div className="w-full">
-      <h2 className="text-xl font-semibold text-gray-600 mb-3">
-        Education vs Occupation: Scatter Plot
-      </h2>
-
-      <div className="mb-8 bg-white border border-gray-300 rounded p-5">
-        <div className="w-full h-[360px] ">
+      <div className="bg-white border border-gray-300 rounded pt-3 px-3">
+        <div className="mb-3">
+          <h2 className="text-xl font-semibold text-gray-600">
+            Education: Emigrants by Educational Attainment
+          </h2>
+        </div>
+        <div className="w-full h-[520px]">
           <ResponsiveContainer width="100%" height="100%">
-            <ScatterChart margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis
-                type="number"
-                dataKey="xPctGraduates"
-                name="Graduates %"
-                unit="%"
-                tickFormatter={(v) => `${v}%`}
-                tick={{ fontSize: 12 }}
-                domain={[0, 100]}
+            <LineChart
+              data={data}
+              margin={{ top: 10, right: 20, left: 10, bottom: 10 }}
+            >
+              <CartesianGrid strokeDasharray="4 4" />
+              <XAxis 
+                dataKey="year" 
+                tick={{ fontSize: 11 }} 
+                angle={-45}
+                textAnchor="end"
+                height={30}
+                interval={1}
               />
-              <YAxis
-                type="number"
-                dataKey="yPctProfessionals"
-                name="Professionals %"
-                unit="%"
-                tickFormatter={(v) => `${v}%`}
-                tick={{ fontSize: 12 }}
-                domain={[0, 100]}
+              <YAxis 
+                tick={{ fontSize: 11 }}
+                tickFormatter={(value) => value.toLocaleString()}
               />
               <Tooltip
-                cursor={{ strokeDasharray: "3 3" }}
-                content={({ active, payload }) => {
-                  if (!active || !payload || payload.length === 0) return null;
-                  const p = payload[0].payload as Point;
-                  return (
-                    <div className="bg-white border border-gray-200 rounded-md px-3 py-2 text-sm">
-                      <div className="font-medium">Year: {p.year}</div>
-                      <div>Graduates: {p.xPctGraduates.toFixed(2)}%</div>
-                      <div>
-                        Professionals: {p.yPctProfessionals.toFixed(2)}%
-                      </div>
-                    </div>
-                  );
+                formatter={(value: number) => value.toLocaleString()}
+                labelFormatter={(label) => `Year: ${label}`}
+                contentStyle={{ 
+                  backgroundColor: "rgba(255, 255, 255, 0.95)",
+                  fontSize: "12px"
                 }}
+                itemStyle={{ fontSize: "12.5px" }}
+                labelStyle={{ fontSize: "12.5px" }}
               />
-              <Legend />
-              <Scatter name="Year" data={points} fill="#3949AB" />
-            </ScatterChart>
+              <Legend 
+                wrapperStyle={{ paddingTop: "20px" }}
+                iconType="line"
+              />
+              {educationKeys.map((key) => (
+                <Line
+                  key={key}
+                  type="monotone"
+                  dataKey={key}
+                  name={educationLabels[key]}
+                  stroke={educationColors[key]}
+                  strokeWidth={2}
+                  dot={false}
+                  connectNulls
+                />
+              ))}
+            </LineChart>
           </ResponsiveContainer>
         </div>
       </div>
-      <p className="text-sm text-gray-500 mt-2">
-        Each dot is a year; X = % of graduates out of all education totals, Y =
-        % of professionals out of total occupation for that year.
-      </p>
     </div>
   );
 };

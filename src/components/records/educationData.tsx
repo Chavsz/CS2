@@ -21,12 +21,11 @@ const EducationTable = () => {
   const onUpdate = async (id: string) => {
     const rec = rows.find(r=>r.id===id)
     const y = prompt('Enter new year:', rec?.year?.toString() ?? '')
-    const g = prompt('Enter new college graduates:', (rec?.graduates ?? 0).toString())
     const t = prompt('Enter new total:', rec?.total?.toString() ?? '')
-    if (y === null || g === null || t === null) return
-    const year = Number(y); const graduates = Number(g); const total = Number(t)
-    if (Number.isNaN(year) || Number.isNaN(total) || Number.isNaN(graduates)) return
-    await updateEducation(id, { year, graduates, total })
+    if (y === null || t === null) return
+    const year = Number(y); const total = Number(t)
+    if (Number.isNaN(year) || Number.isNaN(total)) return
+    await updateEducation(id, { year, total })
     await load()
   }
   const onDelete = async (id: string) => { await deleteEducation(id); await load() }
@@ -44,7 +43,6 @@ const EducationTable = () => {
               <thead>
                 <tr className="bg-slate-50">
                   <th className="p-3 text-left">Year</th>
-                  <th className="p-3 text-left">College Graduates</th>
                   <th className="p-3 text-left">Total Education</th>
                   <th className="p-3 text-left">Actions</th>
                 </tr>
@@ -58,7 +56,6 @@ const EducationTable = () => {
                   return visibleRows.map(er => (
                     <tr key={er.id ?? er.year.toString()}>
                       <td className="p-1.5">{er.year}</td>
-                      <td className="p-1.5">{(er.graduates ?? 0).toLocaleString()}</td>
                       <td className="p-1.5">{er.total.toLocaleString()}</td>
                       <td className="p-1.5">
                         <button onClick={()=>er.id && onUpdate(er.id)} className="mr-1 px-2 py-1 text-stone-900 hover:text-black cursor-pointer"><MdIcons.MdOutlineModeEdit /></button>

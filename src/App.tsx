@@ -2,6 +2,7 @@ import { Routes, Route } from "react-router-dom";
 import Sidebar from "./sidebar";
 import Login from "./auth/login";
 import Register from "./auth/register";
+import Header from "./header";
 import { useAuth } from "./contexts/authContexts/auth";
 import type { AuthContextType } from "./contexts/authContexts/auth";
 
@@ -18,13 +19,28 @@ const App = () => {
   return (
     <div className={containerClass}>
       {userLoggedIn && <Sidebar />}
-      <div className="py-4 px-12">
+      <div>
         <Routes>
-          <Route path="/CS2" element={userLoggedIn ? <Dashboard /> : <Login />} />
-          <Route path="/addRecords" element={userLoggedIn ? <AddRecords /> : <Login />} />
+          <Route path="/CS2" element={userLoggedIn ? (
+            <>
+              <Header />
+              <Dashboard />
+            </>
+          ) : <Login />} />
+          <Route path="/addRecords" element={userLoggedIn ? (
+            <>
+              <Header />
+              <AddRecords />
+            </>
+          ) : <Login />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/records" element={<Records />} />
+          <Route path="/records" element={userLoggedIn ? (
+            <>
+              <Header />
+              <Records />
+            </>
+          ) : <Login />} />
         </Routes>
       </div>
     </div>

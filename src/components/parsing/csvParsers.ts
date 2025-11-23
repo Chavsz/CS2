@@ -7,20 +7,104 @@ import type { CivilStatusRecord } from "../../services/civilStatus";
 
 export const parseAgeCSV = (csvText: string): AgeRecord[] => {
   const lines = csvText.split("\n");
-  const data: AgeRecord[] = [];
+  if (lines.length === 0) return [];
+  
+  // Parse header to get year columns
+  const header = lines[0].trim().split(",");
+  const yearColumns: { year: number; index: number }[] = [];
+  for (let i = 1; i < header.length; i++) {
+    const year = parseInt(header[i].trim(), 10);
+    if (!isNaN(year) && year >= 1981 && year <= 2020) {
+      yearColumns.push({ year, index: i });
+    }
+  }
+  
+  // Age group mapping
+  const ageGroupMapping: { [key: string]: keyof AgeRecord } = {
+    "14 - Below": "age14Below",
+    "15 - 19": "age15to19",
+    "20 - 24": "age20to24",
+    "25 - 29": "age25to29",
+    "30 - 34": "age30to34",
+    "35 - 39": "age35to39",
+    "40 - 44": "age40to44",
+    "45 - 49": "age45to49",
+    "50 - 54": "age50to54",
+    "55 - 59": "age55to59",
+    "60 - 64": "age60to64",
+    "65 - 69": "age65to69",
+    "70 - Above": "age70Above",
+    "Not Reported / No Response": "notReported",
+  };
+  
+  // Initialize data structure: one record per year
+  const dataMap: Map<number, AgeRecord> = new Map();
+  yearColumns.forEach(({ year }) => {
+    dataMap.set(year, {
+      year,
+      age14Below: 0,
+      age15to19: 0,
+      age20to24: 0,
+      age25to29: 0,
+      age30to34: 0,
+      age35to39: 0,
+      age40to44: 0,
+      age45to49: 0,
+      age50to54: 0,
+      age55to59: 0,
+      age60to64: 0,
+      age65to69: 0,
+      age70Above: 0,
+      notReported: 0,
+    });
+  });
+  
+  // Parse each age group row
   for (let i = 1; i < lines.length; i++) {
     const line = lines[i].trim();
     if (line === "") continue;
+    
     const columns = line.split(",");
-    if (columns.length >= 2) {
-      const year = parseInt(columns[0].trim(), 10);
-      const total = parseInt(columns[1].trim(), 10);
-      if (!isNaN(year) && !isNaN(total) && total > 0) {
-        data.push({ year, total });
-      }
+    if (columns.length < 2) continue;
+    
+    const ageGroup = columns[0].trim();
+    const fieldName = ageGroupMapping[ageGroup];
+    
+    if (fieldName) {
+      // For each year, set the value for this age group
+      yearColumns.forEach(({ year, index }) => {
+        const record = dataMap.get(year);
+        if (record && index < columns.length) {
+          const value = parseInt(columns[index].trim() || "0", 10);
+          if (!isNaN(value)) {
+            (record as any)[fieldName] = value;
+          }
+        }
+      });
     }
   }
-  return data;
+  
+  // Convert map to array and calculate totals
+  const data = Array.from(dataMap.values());
+  data.forEach((record) => {
+    record.total = 
+      record.age14Below +
+      record.age15to19 +
+      record.age20to24 +
+      record.age25to29 +
+      record.age30to34 +
+      record.age35to39 +
+      record.age40to44 +
+      record.age45to49 +
+      record.age50to54 +
+      record.age55to59 +
+      record.age60to64 +
+      record.age65to69 +
+      record.age70Above +
+      record.notReported;
+  });
+  
+  return data.sort((a, b) => a.year - b.year);
 };
 
 export const parseMajorCountriesCSV = (csvText: string) => {
@@ -214,39 +298,165 @@ export const parseOccupationCSV = (csvText: string): OccupationData[] => {
 export const parseEducationCSV = (csvText: string): EducationRecord[] => {
   const lines = csvText.split("\n");
   if (lines.length === 0) return [];
+  
+  // Parse header to get year columns
   const header = lines[0].trim().split(",");
-  const yearStart = 1988;
-  const yearEnd = 2020;
-  const yearToCol: Record<number, number> = {};
-  for (let y = yearStart; y <= yearEnd; y++) {
-    const idx = header.findIndex((h) => h.trim() === String(y));
-    if (idx !== -1) yearToCol[y] = idx;
+  const yearColumns: { year: number; index: number }[] = [];
+  for (let i = 1; i < header.length; i++) {
+    const year = parseInt(header[i].trim(), 10);
+    if (!isNaN(year) && year >= 1988 && year <= 2020) {
+      yearColumns.push({ year, index: i });
+    }
   }
-  if (Object.keys(yearToCol).length === 0) return [];
-  let collegeLine: string | null = null;
+  
+  // Education category mapping
+  const educationMapping: { [key: string]: keyof EducationRecord } = {
+    "NotofSchoolingAge": "notOfSchoolingAge",
+    "NoFormalEducation": "noFormalEducation",
+    "ElementaryLevel": "elementaryLevel",
+    "ElementaryGraduate": "elementaryGraduate",
+    "HighSchoolLevel": "highSchoolLevel",
+    "HighSchoolGraduate": "highSchoolGraduate",
+    "VocationalLevel": "vocationalLevel",
+    "VocationalGraduate": "vocationalGraduate",
+    "CollegeLevel": "collegeLevel",
+    "CollegeGraduate": "collegeGraduate",
+    "PostGraduateLevel": "postGraduateLevel",
+    "PostGraduate": "postGraduate",
+    "Non-FormalEducation": "nonFormalEducation",
+    "NotReported/NoResponse": "notReported",
+  };
+  
+  // Initialize data structure: one record per year
+  const dataMap: Map<number, EducationRecord> = new Map();
+  yearColumns.forEach(({ year }) => {
+    dataMap.set(year, {
+      year,
+      notOfSchoolingAge: 0,
+      noFormalEducation: 0,
+      elementaryLevel: 0,
+      elementaryGraduate: 0,
+      highSchoolLevel: 0,
+      highSchoolGraduate: 0,
+      vocationalLevel: 0,
+      vocationalGraduate: 0,
+      collegeLevel: 0,
+      collegeGraduate: 0,
+      postGraduateLevel: 0,
+      postGraduate: 0,
+      nonFormalEducation: 0,
+      notReported: 0,
+      total: 0,
+    });
+  });
+  
+  // Parse each education category row
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (line === "" || line.startsWith("TOTAL")) continue;
+    
+    const columns = line.split(",");
+    if (columns.length < 2) continue;
+    
+    const educationCategory = columns[0].trim();
+    const fieldName = educationMapping[educationCategory];
+    
+    if (fieldName) {
+      // For each year, set the value for this education category
+      yearColumns.forEach(({ year, index }) => {
+        const record = dataMap.get(year);
+        if (record && index < columns.length) {
+          // Remove commas and parse the value
+          const valueStr = (columns[index] || "").trim().replace(/,/g, "");
+          const value = parseInt(valueStr || "0", 10);
+          if (!isNaN(value)) {
+            (record as any)[fieldName] = value;
+          }
+        }
+      });
+    }
+  }
+  
+  // Get total line for validation/calculation
   let totalLine: string | null = null;
   for (let i = 1; i < lines.length; i++) {
     const row = lines[i].trim();
-    if (!row) continue;
-    if (row.startsWith("CollegeGraduate")) collegeLine = row;
-    if (row.startsWith("TOTAL")) totalLine = row;
-  }
-  if (!collegeLine || !totalLine) return [];
-  const collegeCols = collegeLine.split(",");
-  const totalCols = totalLine.split(",");
-  const result: EducationRecord[] = [];
-  for (let y = yearStart; y <= yearEnd; y++) {
-    const col = yearToCol[y];
-    if (col == null) continue;
-    const total = parseInt((totalCols[col] || "").trim() || "0", 10);
-    const grad = parseInt((collegeCols[col] || "").trim() || "0", 10);
-    if (!Number.isNaN(y) && !Number.isNaN(total)) {
-      const rec: EducationRecord = { year: y, total };
-      if (!Number.isNaN(grad)) rec.graduates = grad;
-      result.push(rec);
+    if (row.startsWith("TOTAL")) {
+      totalLine = row;
+      break;
     }
   }
-  return result;
+  
+  // Convert map to array and calculate totals
+  const data = Array.from(dataMap.values());
+  if (totalLine) {
+    const totalCols = totalLine.split(",");
+    data.forEach((record) => {
+      const yearCol = yearColumns.find((yc) => yc.year === record.year);
+      if (yearCol && yearCol.index < totalCols.length) {
+        const totalStr = (totalCols[yearCol.index] || "").trim().replace(/,/g, "");
+        const total = parseInt(totalStr || "0", 10);
+        if (!isNaN(total)) {
+          record.total = total;
+        } else {
+          // Calculate total from all categories if parsing fails
+          record.total = 
+            record.notOfSchoolingAge +
+            record.noFormalEducation +
+            record.elementaryLevel +
+            record.elementaryGraduate +
+            record.highSchoolLevel +
+            record.highSchoolGraduate +
+            record.vocationalLevel +
+            record.vocationalGraduate +
+            record.collegeLevel +
+            record.collegeGraduate +
+            record.postGraduateLevel +
+            record.postGraduate +
+            record.nonFormalEducation +
+            record.notReported;
+        }
+      } else {
+        // Calculate total from all categories
+        record.total = 
+          record.notOfSchoolingAge +
+          record.noFormalEducation +
+          record.elementaryLevel +
+          record.elementaryGraduate +
+          record.highSchoolLevel +
+          record.highSchoolGraduate +
+          record.vocationalLevel +
+          record.vocationalGraduate +
+          record.collegeLevel +
+          record.collegeGraduate +
+          record.postGraduateLevel +
+          record.postGraduate +
+          record.nonFormalEducation +
+          record.notReported;
+      }
+    });
+  } else {
+    // Calculate total from all categories if no total line found
+    data.forEach((record) => {
+      record.total = 
+        record.notOfSchoolingAge +
+        record.noFormalEducation +
+        record.elementaryLevel +
+        record.elementaryGraduate +
+        record.highSchoolLevel +
+        record.highSchoolGraduate +
+        record.vocationalLevel +
+        record.vocationalGraduate +
+        record.collegeLevel +
+        record.collegeGraduate +
+        record.postGraduateLevel +
+        record.postGraduate +
+        record.nonFormalEducation +
+        record.notReported;
+    });
+  }
+  
+  return data.sort((a, b) => a.year - b.year);
 };
 
 export const normalizeCountryName = (name: string): string =>
