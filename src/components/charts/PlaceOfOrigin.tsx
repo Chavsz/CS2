@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getPlaceOfOrigin, deletePlaceOfOrigin, type PlaceOfOriginData, deleteAllPlaceOfOrigin } from '../../services/placeOfOrigin';
+import { getPlaceOfOrigin, type PlaceOfOriginData} from '../../services/placeOfOrigin';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts';
 
 function PlaceOfOrigin() {

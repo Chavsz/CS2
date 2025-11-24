@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import {
   getMajorCountries,
-  addMajorCountries,
   updateMajorCountries,
   deleteMajorCountries,
   deleteAllMajorCountries,
@@ -16,21 +15,6 @@ const MajorCountriesTable = () => {
   const [data, setData] = useState<Row[]>([]);
   const [filterType, setFilterType] = useState<"year" | "total">("total");
   const [selectedYear, setSelectedYear] = useState("");
-  const [showModal, setShowModal] = useState(false);
-  const [form, setForm] = useState<any>({
-    year: "",
-    Usa: "",
-    Canada: "",
-    Japan: "",
-    Australia: "",
-    Italy: "",
-    NewZealand: "",
-    UnitedKingdom: "",
-    Germany: "",
-    SouthKorea: "",
-    Spain: "",
-    Others: "",
-  });
   const [deletingAll, setDeletingAll] = useState(false);
   const [page, setPage] = useState(1);
   const pageSize = 15;
@@ -59,13 +43,15 @@ const MajorCountriesTable = () => {
         : data,
     [data, filterType, selectedYear]
   );
-  
+
   useEffect(() => {
-    const totalPages = Math.max(1, Math.ceil((filtered as any[]).length / pageSize));
+    const totalPages = Math.max(
+      1,
+      Math.ceil((filtered as any[]).length / pageSize)
+    );
     if (page > totalPages) setPage(totalPages);
   }, [filtered, page, pageSize]);
-  const onChange = (e: React.ChangeEvent<HTMLInputElement>) =>
-    setForm({ ...form, [e.target.name]: e.target.value });
+
   const onUpdate = async (id: string) => {
     const ny = prompt("Enter new year:");
     if (ny) {
@@ -152,36 +138,45 @@ const MajorCountriesTable = () => {
                 const start = (page - 1) * pageSize;
                 const end = Math.min(start + pageSize, total);
                 return (filtered as any[]).slice(start, end).map((e: any) => (
-                <tr key={e.id}>
-                  <td className="p-1.5">{e.year || 0}</td>
-                  <td className="p-1.5">{e.Usa || 0}</td>
-                  <td className="p-1.5">{e.Canada || 0}</td>
-                  <td className="p-1.5">{e.Japan || 0}</td>
-                  <td className="p-1.5">{e.Australia || 0}</td>
-                  <td className="p-1.5">{e.Italy || 0}</td>
-                  <td className="p-1.5">{e.NewZealand || 0}</td>
-                  <td className="p-1.5">{e.UnitedKingdom || 0}</td>
-                  <td className="p-1.5">{e.Germany || 0}</td>
-                  <td className="p-1.5">{e.SouthKorea || 0}</td>
-                  <td className="p-1.5">{e.Spain || 0}</td>
-                  <td className="p-1.5">{e.Others || 0}</td>
-                  <td className="p-1.5">
-                    <button
-                      onClick={() => onUpdate(e.id)}
-                      className="mr-1 px-2 py-1 text-stone-900 hover:text-black cursor-pointer"><MdIcons.MdOutlineModeEdit />
-                    </button>
-                    <button
-                      onClick={() => onDelete(e.id)}
-                      className="mr-1 px-2 py-1 text-red-500 hover:text-red-600  cursor-pointer"><MdIcons.MdDelete/>
-                    </button>
-                  </td>
-                </tr>
-                ))
+                  <tr key={e.id}>
+                    <td className="p-1.5">{e.year || 0}</td>
+                    <td className="p-1.5">{e.Usa || 0}</td>
+                    <td className="p-1.5">{e.Canada || 0}</td>
+                    <td className="p-1.5">{e.Japan || 0}</td>
+                    <td className="p-1.5">{e.Australia || 0}</td>
+                    <td className="p-1.5">{e.Italy || 0}</td>
+                    <td className="p-1.5">{e.NewZealand || 0}</td>
+                    <td className="p-1.5">{e.UnitedKingdom || 0}</td>
+                    <td className="p-1.5">{e.Germany || 0}</td>
+                    <td className="p-1.5">{e.SouthKorea || 0}</td>
+                    <td className="p-1.5">{e.Spain || 0}</td>
+                    <td className="p-1.5">{e.Others || 0}</td>
+                    <td className="p-1.5">
+                      <button
+                        onClick={() => onUpdate(e.id)}
+                        className="mr-1 px-2 py-1 text-stone-900 hover:text-black cursor-pointer"
+                      >
+                        <MdIcons.MdOutlineModeEdit />
+                      </button>
+                      <button
+                        onClick={() => onDelete(e.id)}
+                        className="mr-1 px-2 py-1 text-red-500 hover:text-red-600  cursor-pointer"
+                      >
+                        <MdIcons.MdDelete />
+                      </button>
+                    </td>
+                  </tr>
+                ));
               })()}
             </tbody>
           </table>
         </div>
-        <Pagination total={(filtered as any[]).length} page={page} pageSize={pageSize} onPageChange={setPage} />
+        <Pagination
+          total={(filtered as any[]).length}
+          page={page}
+          pageSize={pageSize}
+          onPageChange={setPage}
+        />
       </div>
     </div>
   );

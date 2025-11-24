@@ -214,45 +214,6 @@ const AllCountries = () => {
     return Array.from(map.entries()).map(([id, value]) => ({ id, value }));
   }, [rows]);
 
-  // Build dropdown options from CSV countries filtered by available GeoJSON features
-  const countryOptions = useMemo(() => {
-    if (!features) return [] as { label: string; value: string }[];
-
-    // Map normalized GeoJSON country name -> ISO3 id
-    const nameToIso3 = new Map<string, string>();
-    for (const f of features) {
-      const label = (
-        f?.properties?.name ??
-        f?.properties?.NAME ??
-        ""
-      ).toString();
-      const id = (f?.id ?? f?.properties?.iso_a3 ?? "").toString();
-      if (!label || !id) continue;
-      nameToIso3.set(normalizeCountryName(label), id);
-    }
-
-    const opts: { label: string; value: string }[] = [];
-    for (const raw of CSV_COUNTRIES) {
-      if (raw === "GRAND TOTAL") continue;
-      const normalized = normalizeCountryName(raw);
-      const alias = CSV_NAME_ALIASES[normalized] ?? normalized;
-      const iso = nameToIso3.get(alias);
-      if (iso) {
-        // Use title case label for nice display
-        const niceLabel = raw
-          .toLowerCase()
-          .split(" ")
-          .map((s) => (s.length ? s[0].toUpperCase() + s.slice(1) : s))
-          .join(" ")
-          .replace(" And ", " and ");
-        opts.push({ label: niceLabel, value: iso });
-      } else {
-        // Not found in GeoJSON, skip silently
-      }
-    }
-    return opts.sort((a, b) => a.label.localeCompare(b.label));
-  }, [features]);
-
   return (
     <div className="w-full">
       <div className="mb-8 bg-white border border-gray-300 rounded py-4 px-3">

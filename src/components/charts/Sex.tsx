@@ -25,12 +25,6 @@ const Sex = () => {
     })();
   }, []);
 
-  const reload = async () => {
-    const rows = await getSexes();
-    rows.sort((a, b) => a.year - b.year);
-    setData(rows);
-  };
-
   return (
     <div className="w-full">
       <h2 className="text-xl font-semibold text-gray-600 mb-3">
