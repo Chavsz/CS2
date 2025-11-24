@@ -238,7 +238,7 @@ function Occupation() {
             y={y}
             width={width}
             height={height}
-            fill={payload?.fill ?? "#F5CFBA"}
+            fill={payload?.fill ?? "#6D5ACF"}
             stroke="#fff"
             strokeWidth={1}
             rx={6}
@@ -252,18 +252,8 @@ function Occupation() {
                 textAnchor="middle"
                 fill="#4B3B2B"
                 fontSize={11}
-                fontWeight={600}
               >
                 {displayName}
-              </text>
-              <text
-                x={x + width / 2}
-                y={y + height / 2 + 8}
-                textAnchor="middle"
-                fill="#5C4A3F"
-                fontSize={10}
-              >
-                {value?.toLocaleString()}
               </text>
             </>
           )}
@@ -415,12 +405,12 @@ function Occupation() {
               Distribution of emigrants with reported employment
             </p>
           </div>
-          <div className="h-[420px] rounded-lg bg-[#FDEDD2] p-4">
+          <div className="h-[420px]">
             <ResponsiveContainer width="100%" height="100%">
               <Treemap
                 data={employedTreemapData}
                 dataKey="size"
-                stroke="#fff"
+                stroke="#ffffff"
                 content={renderTreemapContent as any}
                 isAnimationActive={false}
               />
@@ -436,12 +426,12 @@ function Occupation() {
               Distribution of emigrants without current employment
             </p>
           </div>
-          <div className="h-[420px] rounded-lg bg-[#FBD5DD] p-4">
+          <div className="h-[420px]">
             <ResponsiveContainer width="100%" height="100%">
               <Treemap
                 data={unemployedTreemapData}
                 dataKey="size"
-                stroke="#fff"
+                stroke="#ffffff"
                 content={renderTreemapContent as any}
                 isAnimationActive={false}
               />
