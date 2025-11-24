@@ -21,7 +21,7 @@ const App = () => {
       {userLoggedIn && <Sidebar />}
       <div>
         <Routes>
-          <Route path="/CS2" element={userLoggedIn ? (
+          <Route path="/" element={userLoggedIn ? (
             <>
               <Header />
               <Dashboard />
