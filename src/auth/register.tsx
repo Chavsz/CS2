@@ -33,7 +33,7 @@ const Register = () => {
     }
   };
 
-  if (userLoggedIn) return <Navigate to={"/CS2"} replace={true} />;
+  if (userLoggedIn) return <Navigate to={"/"} replace={true} />;
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-[#fafafc]">

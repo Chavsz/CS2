@@ -15,7 +15,7 @@ const RouteSelect = () => {
   useEffect(() => {
     setSelected(location.pathname);
     // Auto-expand dashboard if we're on dashboard route
-    if (location.pathname === "/CS2") {
+    if (location.pathname === "/") {
       setIsDashboardExpanded(true);
       setIsRecordsExpanded(false);
     }
@@ -43,7 +43,7 @@ const RouteSelect = () => {
     setIsDashboardExpanded(!isDashboardExpanded);
     setIsRecordsExpanded(false);
     if (!isDashboardExpanded) {
-      navigate("/CS2?dataset=Age");
+      navigate("/?dataset=Age");
     }
   };
 
@@ -74,13 +74,13 @@ const RouteSelect = () => {
         <button
           onClick={handleDashboardClick}
           className={`flex items-center md:justify-start justify-center gap-2 w-full rounded px-2 py-2 md:py-1.5 md:text-sm text-1xl transition-all duration-300 ${
-            selected === "/CS2"
+            selected === "/"
               ? "bg-stone-100 text-[#696969] shadow"
               : "hover:bg-stone-100 text-[#696969] shadow-none"
           }`}
         >
           <mdIcons.MdOutlineDashboard
-            className={`${selected === "/CS2" ? "text-[#696969] " : ""}`}
+            className={`${selected === "/" ? "text-[#696969] " : ""}`}
           />
           <p className="text-md font-semibold hidden md:block flex-1 text-left">
             Dashboard
@@ -109,11 +109,11 @@ const RouteSelect = () => {
           <div className="ml-4 mt-1 space-y-1 hidden md:block">
             {datasetOptions.map((option) => {
               const isSelected =
-                option.value === currentDataset && location.pathname === "/CS2";
+                option.value === currentDataset && location.pathname === "/";
               return (
                 <button
                   key={option.value}
-                  onClick={() => handleDatasetSelect(option.value, "/CS2")}
+                  onClick={() => handleDatasetSelect(option.value, "/")}
                   className={`w-full flex items-center justify-between px-2 py-1.5 rounded text-sm transition-colors duration-300 ${
                     isSelected
                       ? "bg-indigo-50 text-indigo-600"

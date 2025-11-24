@@ -83,12 +83,12 @@ const Age = () => {
   return (
     <div className="">
       <div className="inline-block mb-5">
-        <div className="rounded-md border border-gray-300 p-4 w-[200px]">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-7 h-7 bg-white rounded-md border border-indigo-600 flex items-center justify-center">
+        <div className="rounded-md border border-gray-300 p-4 w-[200px] bg-white">
+          <div className="flex items-center gap-3 mb-2.5">
+            <div className="w-6.5 h-6.5 bg-white rounded-md border border-indigo-600 flex items-center justify-center">
             <GoPersonAdd className="text-indigo-600 text-md" />
             </div>
-            <p className="text-gray-600">Total</p>
+            <p className="text-gray-600 text-md">Total</p>
           </div>
           <p className="text-black font-medium text-2xl">
             {data.reduce((sum, record) => sum + (record.total ?? 0), 0).toLocaleString()}

@@ -15,10 +15,10 @@ const Sidebar = () => {
     }
   };
   return (
-    <div className=" text-white sticky top-0 bg-white h-screen border-r-2 border-gray-200">
+    <div className="text-white sticky top-0 bg-white h-screen border-r-2 border-gray-200">
       <div className="top-4 h-[calc(100vh-32px-50px)]">
       <h1 className="text-xl md:text-2xl font-bold text-center text-indigo-600 hidden md:block border-b-2 border-gray-200 px-4 py-3.5">PH Emigrants</h1>
-        <div className="p-4">
+        <div className="px-4 pt-8">
           <RouteSelect />
         </div>
       </div>

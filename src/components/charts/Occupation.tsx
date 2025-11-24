@@ -11,7 +11,9 @@ import {
   Tooltip,
   CartesianGrid,
   ResponsiveContainer,
+  Treemap,
 } from "recharts";
+import type { TreemapNode } from "recharts/types/chart/Treemap";
 
 function Occupation() {
   const [occupationData, setOccupationData] = useState<OccupationData[]>([]);
@@ -159,6 +161,118 @@ function Occupation() {
 
   const chartData = getHistogramData();
 
+  const employedCategories = [
+    { name: "Professional/Technical", size: totals.professionalTechnical },
+    { name: "Managerial/Executive", size: totals.managerialExecutive },
+    { name: "Clerical Workers", size: totals.clericalWorkers },
+    { name: "Sales Workers", size: totals.salesWorkers },
+    { name: "Service Workers", size: totals.serviceWorkers },
+    { name: "Agriculture/Fishery", size: totals.agriculturalWorkers },
+    { name: "Production/Transport", size: totals.productionTransportLaborers },
+    { name: "Armed Forces", size: totals.armedForces },
+  ];
+
+  const unemployedCategories = [
+    { name: "Students", size: totals.students },
+    { name: "Housewives", size: totals.housewives },
+    { name: "Retirees", size: totals.retirees },
+    { name: "Minors", size: totals.minors },
+    { name: "Out of School Youth", size: totals.outOfSchoolYouth },
+    { name: "No Occupation Reported", size: totals.noOccupationReported },
+    { name: "Refugees", size: totals.refugees },
+  ];
+
+  const employedPalette = ["#F2A65A", "#F6B26B", "#F9C784", "#F7A278", "#F4AD90"];
+  const unemployedPalette = [
+    "#F6A5C0",
+    "#F7B7CC",
+    "#F8CAD8",
+    "#F9DCE4",
+    "#FACEE2",
+  ];
+
+  const mapTreemapData = (
+    data: { name: string; size: number }[],
+    palette: string[]
+  ) =>
+    data
+      .filter((item) => item.size > 0)
+      .map((item, index) => ({
+        ...item,
+        fill: palette[index % palette.length],
+      }));
+
+  const employedTreemapData = mapTreemapData(employedCategories, employedPalette);
+  const unemployedTreemapData = mapTreemapData(
+    unemployedCategories,
+    unemployedPalette
+  );
+
+  type TreemapContentProps = TreemapNode & {
+    payload?: { fill?: string };
+  };
+
+  const renderTreemapContent = ({
+    depth,
+    x,
+    y,
+    width,
+    height,
+    payload,
+    value,
+    name,
+  }: TreemapContentProps) => {
+    if (depth === 1) {
+      const canShowText = width > 35 && height > 20;
+      const safeName = name ?? "";
+      const maxChars = Math.floor(width / 7);
+      const displayName =
+        safeName.length > maxChars && maxChars > 3
+          ? `${safeName.slice(0, maxChars)}…`
+          : safeName;
+
+      return (
+        <g>
+          <rect
+            x={x}
+            y={y}
+            width={width}
+            height={height}
+            fill={payload?.fill ?? "#F5CFBA"}
+            stroke="#fff"
+            strokeWidth={1}
+            rx={6}
+            ry={6}
+          />
+          {canShowText && (
+            <>
+              <text
+                x={x + width / 2}
+                y={y + height / 2 - 8}
+                textAnchor="middle"
+                fill="#4B3B2B"
+                fontSize={11}
+                fontWeight={600}
+              >
+                {displayName}
+              </text>
+              <text
+                x={x + width / 2}
+                y={y + height / 2 + 8}
+                textAnchor="middle"
+                fill="#5C4A3F"
+                fontSize={10}
+              >
+                {value?.toLocaleString()}
+              </text>
+            </>
+          )}
+        </g>
+      );
+    }
+    return null;
+  };
+
   return (
     <div className="">
       {/* Filter Controls */}
@@ -290,6 +404,51 @@ function Occupation() {
         </ResponsiveContainer>
       </div>
 
+      {/* Treemap Charts */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div className="bg-white border border-gray-200 rounded-lg p-5">
+          <div className="mb-4">
+            <h3 className="text-base font-semibold text-gray-800">
+              Employed Occupations
+            </h3>
+            <p className="text-sm text-gray-500">
+              Distribution of emigrants with reported employment
+            </p>
+          </div>
+          <div className="h-[420px] rounded-lg bg-[#FDEDD2] p-4">
+            <ResponsiveContainer width="100%" height="100%">
+              <Treemap
+                data={employedTreemapData}
+                dataKey="size"
+                stroke="#fff"
+                content={renderTreemapContent as any}
+                isAnimationActive={false}
+              />
+            </ResponsiveContainer>
+          </div>
+        </div>
+        <div className="bg-white border border-gray-200 rounded-lg p-5">
+          <div className="mb-4">
+            <h3 className="text-base font-semibold text-gray-800">
+              Not Employed
+            </h3>
+            <p className="text-sm text-gray-500">
+              Distribution of emigrants without current employment
+            </p>
+          </div>
+          <div className="h-[420px] rounded-lg bg-[#FBD5DD] p-4">
+            <ResponsiveContainer width="100%" height="100%">
+              <Treemap
+                data={unemployedTreemapData}
+                dataKey="size"
+                stroke="#fff"
+                content={renderTreemapContent as any}
+                isAnimationActive={false}
+              />
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
