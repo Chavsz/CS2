@@ -594,7 +594,24 @@ const AddRecords = () => {
             values={ageForm} 
             setValues={setAgeForm} 
             onSubmit={async () => { 
-              await addAge({ year: Number(ageForm.year)||0, total: Number(ageForm.total)||0 }); 
+              await addAge({ 
+                year: Number(ageForm.year)||0, 
+                age14Below: 0,
+                age15to19: 0,
+                age20to24: 0,
+                age25to29: 0,
+                age30to34: 0,
+                age35to39: 0,
+                age40to44: 0,
+                age45to49: 0,
+                age50to54: 0,
+                age55to59: 0,
+                age60to64: 0,
+                age65to69: 0,
+                age70Above: 0,
+                notReported: 0,
+                total: Number(ageForm.total)||0 
+              }); 
               setAgeForm({ year:'', total:'' }); 
               setShowAgeModal(false); 
             }} 
