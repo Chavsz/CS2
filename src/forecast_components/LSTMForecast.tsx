@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { cleanData, sortData, normalizeData, denormalize, createSequences, calculateMetrics } from '../utils/dataPreparation';
 import { buildLSTMModel, trainLSTMModel, predictLSTM, saveLSTMModel, loadLSTMModel, deleteLSTMModel, downloadLSTMModel } from '../models/lstmModel';
-import './ForecastPanel.css';
 
 export default function LSTMForecast({ data }) {
   const [isTraining, setIsTraining] = useState(false);
@@ -194,34 +193,50 @@ export default function LSTMForecast({ data }) {
   const chartData = [...data, ...forecasts];
 
   return (
-    <div className="forecast-panel lstm-panel">
-      <h2>LSTM Forecasting (Long Short-Term Memory)</h2>
+    <div className="bg-white rounded-xl p-8 shadow-md mt-8 border border-gray-300">
+      <h2 className="text-gray-800 mb-6 text-2xl">LSTM Forecasting (Long Short-Term Memory)</h2>
 
-      <div className="control-buttons">
-        <button onClick={handleTrain} disabled={isTraining}>
+      <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+        <button 
+          onClick={handleTrain} 
+          disabled={isTraining}
+          className="px-6 py-3 bg-indigo-600 text-white border-none rounded-md text-base font-medium cursor-pointer transition-colors duration-300 hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed md:w-full"
+        >
           {isTraining ? 'Training...' : 'Train LSTM Model'}
         </button>
-        <button onClick={handleLoadModel} disabled={isTraining}>
+        <button 
+          onClick={handleLoadModel} 
+          disabled={isTraining}
+          className="px-6 py-3 bg-indigo-600 text-white border-none rounded-md text-base font-medium cursor-pointer transition-colors duration-300 hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed md:w-full"
+        >
           Load Model
         </button>
-        <button onClick={handleDeleteModel} disabled={isTraining || !model}>
+        <button 
+          onClick={handleDeleteModel} 
+          disabled={isTraining || !model}
+          className="px-6 py-3 bg-indigo-600 text-white border-none rounded-md text-base font-medium cursor-pointer transition-colors duration-300 hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed md:w-full"
+        >
           Delete Model
         </button>
-        <button onClick={handleDownloadModel} disabled={isTraining || !model}>
+        <button 
+          onClick={handleDownloadModel} 
+          disabled={isTraining || !model}
+          className="px-6 py-3 bg-indigo-600 text-white border-none rounded-md text-base font-medium cursor-pointer transition-colors duration-300 hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed md:w-full"
+        >
           Download Model
         </button>
       </div>
 
       {isTraining && trainingProgress && (
-        <div className="training-progress">
-          <h3>Training Progress</h3>
-          <p>Epoch: {trainingProgress.epoch} / 100</p>
-          <p>Loss: {trainingProgress.loss}</p>
-          <p>MAE: {trainingProgress.mae}</p>
+        <div className="bg-blue-50 border-l-4 border-blue-500 p-6 mb-6 rounded-md">
+          <h3 className="text-blue-700 mb-4 text-xl">Training Progress</h3>
+          <p className="my-2 text-gray-800 font-mono">Epoch: {trainingProgress.epoch} / 100</p>
+          <p className="my-2 text-gray-800 font-mono">Loss: {trainingProgress.loss}</p>
+          <p className="my-2 text-gray-800 font-mono">MAE: {trainingProgress.mae}</p>
           {trainingProgress.val_loss && (
             <>
-              <p>Val Loss: {trainingProgress.val_loss}</p>
-              <p>Val MAE: {trainingProgress.val_mae}</p>
+              <p className="my-2 text-gray-800 font-mono">Val Loss: {trainingProgress.val_loss}</p>
+              <p className="my-2 text-gray-800 font-mono">Val MAE: {trainingProgress.val_mae}</p>
             </>
           )}
         </div>
@@ -229,52 +244,52 @@ export default function LSTMForecast({ data }) {
 
       {metrics && !isTraining && (
         <>
-          <div className="metrics">
-            <h3>LSTM Model Performance Metrics</h3>
-            <div className="metrics-grid">
-              <div className="metric-item">
-                <span className="metric-label">MAE:</span>
-                <span className="metric-value">{metrics.mae}</span>
+          <div className="bg-green-50 border-l-4 border-green-500 p-6 mb-6 rounded-md">
+            <h3 className="text-green-700 mb-4 text-xl">LSTM Model Performance Metrics</h3>
+            <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-5">
+              <div className="flex flex-col p-4 bg-white rounded-md shadow-sm">
+                <span className="text-sm text-gray-600 mb-2">MAE:</span>
+                <span className="text-2xl font-bold text-gray-800">{metrics.mae}</span>
               </div>
-              <div className="metric-item">
-                <span className="metric-label">RMSE:</span>
-                <span className="metric-value">{metrics.rmse}</span>
+              <div className="flex flex-col p-4 bg-white rounded-md shadow-sm">
+                <span className="text-sm text-gray-600 mb-2">RMSE:</span>
+                <span className="text-2xl font-bold text-gray-800">{metrics.rmse}</span>
               </div>
-              <div className="metric-item">
-                <span className="metric-label">MAPE:</span>
-                <span className="metric-value">{metrics.mape}%</span>
+              <div className="flex flex-col p-4 bg-white rounded-md shadow-sm">
+                <span className="text-sm text-gray-600 mb-2">MAPE:</span>
+                <span className="text-2xl font-bold text-gray-800">{metrics.mape}%</span>
               </div>
-              <div className="metric-item">
-                <span className="metric-label">R²:</span>
-                <span className="metric-value">{metrics.r2}</span>
+              <div className="flex flex-col p-4 bg-white rounded-md shadow-sm">
+                <span className="text-sm text-gray-600 mb-2">R²:</span>
+                <span className="text-2xl font-bold text-gray-800">{metrics.r2}</span>
               </div>
-              <div className="metric-item">
-                <span className="metric-label">Accuracy:</span>
-                <span className="metric-value">{metrics.accuracy}%</span>
+              <div className="flex flex-col p-4 bg-white rounded-md shadow-sm">
+                <span className="text-sm text-gray-600 mb-2">Accuracy:</span>
+                <span className="text-2xl font-bold text-gray-800">{metrics.accuracy}%</span>
               </div>
             </div>
           </div>
 
           {validationResults.length > 0 && (
-            <div className="training-results">
-              <h3>Testing Results - 20% Split (Actual vs Predicted)</h3>
-              <div className="table-scroll">
-                <table>
+            <div className="bg-teal-50 border-l-4 border-teal-500 p-6 mb-6 rounded-md">
+              <h3 className="text-teal-700 mb-4 text-xl">Testing Results - 20% Split (Actual vs Predicted)</h3>
+              <div className="max-h-96 overflow-y-auto rounded-md">
+                <table className="w-full border-collapse bg-white rounded-md overflow-hidden">
                   <thead>
                     <tr>
-                      <th>Year</th>
-                      <th>Actual Emigrants</th>
-                      <th>Predicted Emigrants</th>
-                      <th>Error</th>
+                      <th className="p-3 text-left border-b border-gray-200 bg-teal-500 text-white font-semibold sticky top-0 z-10">Year</th>
+                      <th className="p-3 text-left border-b border-gray-200 bg-teal-500 text-white font-semibold sticky top-0 z-10">Actual Emigrants</th>
+                      <th className="p-3 text-left border-b border-gray-200 bg-teal-500 text-white font-semibold sticky top-0 z-10">Predicted Emigrants</th>
+                      <th className="p-3 text-left border-b border-gray-200 bg-teal-500 text-white font-semibold sticky top-0 z-10">Error</th>
                     </tr>
                   </thead>
                   <tbody>
                     {validationResults.map((row, i) => (
-                      <tr key={i}>
-                        <td>{row.year}</td>
-                        <td>{row.actual.toLocaleString()}</td>
-                        <td>{row.predicted.toLocaleString()}</td>
-                        <td className={row.error >= 0 ? 'error-positive' : 'error-negative'}>
+                      <tr key={i} className="hover:bg-gray-100 last:border-b-0">
+                        <td className="p-3 text-left border-b border-gray-200">{row.year}</td>
+                        <td className="p-3 text-left border-b border-gray-200">{row.actual.toLocaleString()}</td>
+                        <td className="p-3 text-left border-b border-gray-200">{row.predicted.toLocaleString()}</td>
+                        <td className={`p-3 text-left border-b border-gray-200 font-semibold ${row.error >= 0 ? 'text-red-600' : 'text-green-600'}`}>
                           {row.error >= 0 ? '+' : ''}{row.error.toLocaleString()}
                         </td>
                       </tr>
@@ -288,10 +303,10 @@ export default function LSTMForecast({ data }) {
       )}
 
       {model && !isTraining && (
-        <div className="forecast-controls">
-          <h3>Generate LSTM Forecast</h3>
-          <div className="forecast-input">
-            <label>
+        <div className="bg-orange-50 border-l-4 border-orange-500 p-6 mb-6 rounded-md">
+          <h3 className="text-orange-800 mb-4 text-xl">Generate LSTM Forecast</h3>
+          <div className="flex items-center gap-4 flex-wrap">
+            <label className="flex items-center gap-2 text-gray-800">
               Years to forecast:
               <input
                 type="number"
@@ -299,17 +314,23 @@ export default function LSTMForecast({ data }) {
                 max="10"
                 value={forecastYears}
                 onChange={(e) => setForecastYears(parseInt(e.target.value))}
+                className="p-2 border border-gray-300 rounded w-20 text-base"
               />
             </label>
-            <button onClick={handleForecast}>Generate Forecast</button>
+            <button 
+              onClick={handleForecast}
+              className="px-6 py-3 bg-[#ff6b6b] text-white border-none rounded-md text-base font-medium cursor-pointer transition-colors duration-300 hover:bg-[#ee5253]"
+            >
+              Generate Forecast
+            </button>
           </div>
         </div>
       )}
 
       {forecasts.length > 0 && (
         <>
-          <div className="chart-container">
-            <h3>LSTM: Historical + Forecast</h3>
+          <div className="mb-6">
+            <h3 className="text-gray-800 mb-4 text-xl">LSTM: Historical + Forecast</h3>
             <ResponsiveContainer width="100%" height={400}>
               <LineChart
                 data={chartData}
@@ -353,20 +374,20 @@ export default function LSTMForecast({ data }) {
             </ResponsiveContainer>
           </div>
 
-          <div className="forecast-results">
-            <h3>LSTM Forecast Results</h3>
-            <table>
+          <div className="bg-pink-50 border-l-4 border-pink-500 p-6 mb-6 rounded-md">
+            <h3 className="text-pink-700 mb-4 text-xl">LSTM Forecast Results</h3>
+            <table className="w-full border-collapse bg-white rounded-md overflow-hidden">
               <thead>
                 <tr>
-                  <th>Year</th>
-                  <th>Predicted Emigrants</th>
+                  <th className="p-3 text-left border-b border-gray-200 bg-pink-500 text-white font-semibold">Year</th>
+                  <th className="p-3 text-left border-b border-gray-200 bg-pink-500 text-white font-semibold">Predicted Emigrants</th>
                 </tr>
               </thead>
               <tbody>
                 {forecasts.map((f, i) => (
-                  <tr key={i}>
-                    <td>{f.year}</td>
-                    <td>{f.emigrants.toLocaleString()}</td>
+                  <tr key={i} className="hover:bg-gray-100 last:border-b-0">
+                    <td className="p-3 text-left border-b border-gray-200">{f.year}</td>
+                    <td className="p-3 text-left border-b border-gray-200">{f.emigrants.toLocaleString()}</td>
                   </tr>
                 ))}
               </tbody>
@@ -375,15 +396,15 @@ export default function LSTMForecast({ data }) {
         </>
       )}
 
-      <div className="info-box">
-        <h4>LSTM Model Configuration</h4>
-        <ul>
-          <li>Architecture: 2 LSTM layers (50 units each)</li>
-          <li>Lookback window: {LOOKBACK} years</li>
-          <li>Input features: Emigrants (historical values)</li>
-          <li>Target: Emigrants (next year)</li>
-          <li>Dropout: 0.2</li>
-          <li>Epochs: 100 | Validation split: 20%</li>
+      <div className="bg-indigo-50 border-l-4 border-indigo-500 p-6 rounded-md">
+        <h4 className="text-indigo-800 mb-4 text-lg">LSTM Model Configuration</h4>
+        <ul className="list-none p-0 m-0">
+          <li className="py-2 text-gray-800 border-b border-indigo-200">Architecture: 2 LSTM layers (50 units each)</li>
+          <li className="py-2 text-gray-800 border-b border-indigo-200">Lookback window: {LOOKBACK} years</li>
+          <li className="py-2 text-gray-800 border-b border-indigo-200">Input features: Emigrants (historical values)</li>
+          <li className="py-2 text-gray-800 border-b border-indigo-200">Target: Emigrants (next year)</li>
+          <li className="py-2 text-gray-800 border-b border-indigo-200">Dropout: 0.2</li>
+          <li className="py-2 text-gray-800 border-b-0">Epochs: 100 | Validation split: 20%</li>
         </ul>
       </div>
     </div>
