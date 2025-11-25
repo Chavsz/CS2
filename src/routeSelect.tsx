@@ -4,6 +4,7 @@ import { datasetOptions, type DatasetKey } from "./components/selectData";
 import { IoCheckmarkDone } from "react-icons/io5";
 import * as mdIcons from "react-icons/md";
 import * as bsIcons from "react-icons/bs";
+import { GoGraph } from "react-icons/go";
 
 const RouteSelect = () => {
   const [selected, setSelected] = useState(window.location.pathname);
@@ -102,7 +103,7 @@ const RouteSelect = () => {
           </svg>
         </button>
         <div
-          className={`overflow-hidden transition-all duration-300 ${
+          className={`overflow-hidden transition-all duration-700 ${
             isDashboardExpanded ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
           }`}
         >
@@ -137,6 +138,7 @@ const RouteSelect = () => {
         title="Add Records"
         handleSelect={handleSelect}
       />
+      
       <div>
         <button
           onClick={handleRecordsClick}
@@ -169,7 +171,7 @@ const RouteSelect = () => {
           </svg>
         </button>
         <div
-          className={`overflow-hidden transition-all duration-300 ${
+          className={`overflow-hidden transition-all duration-700 ${
             isRecordsExpanded ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
           }`}
         >
@@ -200,6 +202,13 @@ const RouteSelect = () => {
           </div>
         </div>
       </div>
+      <Route
+        to="/timeseries"
+        selected={selected}
+        Icon={GoGraph}
+        title="Time Series"
+        handleSelect={handleSelect}
+      />
     </div>
   );
 };

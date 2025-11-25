@@ -3,6 +3,7 @@ import Sidebar from "./sidebar";
 import Login from "./auth/login";
 import Register from "./auth/register";
 import Header from "./header";
+import TimeSeries from "./Time-Series"
 import { useAuth } from "./contexts/authContexts/auth";
 import type { AuthContextType } from "./contexts/authContexts/auth";
 
@@ -33,14 +34,20 @@ const App = () => {
               <AddRecords />
             </>
           ) : <Login />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
           <Route path="/records" element={userLoggedIn ? (
             <>
               <Header />
               <Records />
             </>
           ) : <Login />} />
+          <Route path="/timeseries" element={userLoggedIn ? (
+            <>
+              <Header />
+              <TimeSeries />
+            </>
+          ) : <Login />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
         </Routes>
       </div>
     </div>
