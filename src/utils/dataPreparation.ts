@@ -10,7 +10,9 @@ export function cleanData(data) {
   return data.map(row => ({
     year: parseInt(row.year) || 0,
     population: parseFloat(row.population) || 0,
-    emigrants: parseFloat(row.emigrants) || 0
+    emigrants: parseFloat(row.emigrants) || 0,
+    male: parseFloat(row.male) || 0,
+    female: parseFloat(row.female) || 0
   }));
 }
 
@@ -52,8 +54,22 @@ export function normalizeData(data, features = ['population', 'emigrants']) {
 /**
  * Denormalize values back to original scale
  * denormalized = normalized * (max - min) + min
+ * Supports both single value and array of values
  */
 export function denormalize(normalizedValue, min, max) {
+  if (Array.isArray(normalizedValue)) {
+    // Handle array of values (multiple targets)
+    if (Array.isArray(min) && Array.isArray(max)) {
+      return normalizedValue.map((val, idx) => {
+        const range = max[idx] - min[idx];
+        return range === 0 ? 0 : val * range + min[idx];
+      });
+    }
+    // If min/max are single values, apply to all
+    const range = max - min;
+    return normalizedValue.map(val => range === 0 ? 0 : val * range + min);
+  }
+  // Single value
   return normalizedValue * (max - min) + min;
 }
 
@@ -61,13 +77,16 @@ export function denormalize(normalizedValue, min, max) {
  * Create sequences using sliding window approach
  * @param {Array} data - Normalized data
  * @param {number} lookback - Window size (default: 3)
- * @param {Array} features - Features to use as input ['population', 'emigrants']
- * @param {string} target - Target feature to predict ('emigrants')
+ * @param {Array} features - Features to use as input ['male', 'female'] or ['population', 'emigrants']
+ * @param {Array|string} target - Target feature(s) to predict ('emigrants' or ['male', 'female'])
  * @returns {Object} - { X: input sequences, y: target values }
  */
-export function createSequences(data, lookback = 3, features = ['population', 'emigrants'], target = 'emigrants') {
+export function createSequences(data, lookback = 3, features = ['male', 'female'], target = ['male', 'female']) {
   const X = [];
   const y = [];
+
+  // Handle both single target (string) and multiple targets (array)
+  const targetArray = Array.isArray(target) ? target : [target];
 
   for (let i = lookback; i < data.length; i++) {
     // Get lookback window of features
@@ -78,8 +97,14 @@ export function createSequences(data, lookback = 3, features = ['population', 'e
     }
     X.push(sequence);
 
-    // Target is the next value of the target feature
-    y.push(data[i][target]);
+    // Target is the next value(s) of the target feature(s)
+    if (targetArray.length === 1) {
+      // Single target (backward compatibility)
+      y.push(data[i][targetArray[0]]);
+    } else {
+      // Multiple targets (e.g., [male, female])
+      y.push(targetArray.map(t => data[i][t]));
+    }
   }
 
   return { X, y };

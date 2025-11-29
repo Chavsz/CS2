@@ -14,8 +14,8 @@ export default function LSTMForecast({ data }) {
   const [validationResults, setValidationResults] = useState([]);
 
   const LOOKBACK = 2;
-  const FEATURES = ['emigrants'];
-  const TARGET = 'emigrants';
+  const FEATURES = ['male', 'female'];
+  const TARGETS = ['male', 'female'];
 
   const handleTrain = async () => {
     setIsTraining(true);
@@ -27,9 +27,10 @@ export default function LSTMForecast({ data }) {
       cleanedData = sortData(cleanedData);
 
       const { normalized, mins, maxs } = normalizeData(cleanedData, FEATURES);
-      const { X, y } = createSequences(normalized, LOOKBACK, FEATURES, TARGET);
+      const { X, y } = createSequences(normalized, LOOKBACK, FEATURES, TARGETS);
 
-      const newModel = buildLSTMModel(LOOKBACK, FEATURES.length);
+      // Build model with 2 output units (male and female)
+      const newModel = buildLSTMModel(LOOKBACK, FEATURES.length, TARGETS.length);
 
       const onEpochEnd = (epoch, logs) => {
         setTrainingProgress({
@@ -45,32 +46,70 @@ export default function LSTMForecast({ data }) {
 
       const normalizedPredictions = await predictLSTM(newModel, X);
 
-      const predictions = normalizedPredictions.map(pred =>
-        denormalize(pred, mins[TARGET], maxs[TARGET])
-      );
+      // Handle multiple targets: predictions is 2D array [[male, female], ...]
+      const predictions = normalizedPredictions.map(pred => {
+        if (Array.isArray(pred)) {
+          return {
+            male: denormalize(pred[0], mins.male, maxs.male),
+            female: denormalize(pred[1], mins.female, maxs.female)
+          };
+        }
+        // Fallback for single target (shouldn't happen)
+        return { male: 0, female: 0 };
+      });
 
-      const actualValues = y.map(val =>
-        denormalize(val, mins[TARGET], maxs[TARGET])
-      );
+      const actualValues = y.map(val => {
+        if (Array.isArray(val)) {
+          return {
+            male: denormalize(val[0], mins.male, maxs.male),
+            female: denormalize(val[1], mins.female, maxs.female)
+          };
+        }
+        return { male: 0, female: 0 };
+      });
 
       // Create validation results table data (20% validation split for testing)
       const trainSize = Math.floor(actualValues.length * 0.8);
-      const resultsData = actualValues.slice(trainSize).map((actual, index) => ({
-        year: cleanedData[trainSize + index + LOOKBACK].year,
-        actual: Math.round(actual),
-        predicted: Math.round(predictions[trainSize + index]),
-        error: Math.round(predictions[trainSize + index] - actual)
-      }));
+      const resultsData = actualValues.slice(trainSize).map((actual, index) => {
+        const pred = predictions[trainSize + index];
+        return {
+          year: cleanedData[trainSize + index + LOOKBACK].year,
+          actualMale: Math.round(actual.male),
+          predictedMale: Math.round(pred.male),
+          errorMale: Math.round(pred.male - actual.male),
+          actualFemale: Math.round(actual.female),
+          predictedFemale: Math.round(pred.female),
+          errorFemale: Math.round(pred.female - actual.female)
+        };
+      });
       setValidationResults(resultsData);
 
-      const calculatedMetrics = calculateMetrics(actualValues, predictions);
+      // Calculate metrics for both male and female
+      const maleActual = actualValues.map(v => v.male);
+      const malePred = predictions.map(p => p.male);
+      const femaleActual = actualValues.map(v => v.female);
+      const femalePred = predictions.map(p => p.female);
+
+      const maleMetrics = calculateMetrics(maleActual, malePred);
+      const femaleMetrics = calculateMetrics(femaleActual, femalePred);
+
+      // Average metrics for overall performance
+      const calculatedMetrics = {
+        mae: ((parseFloat(maleMetrics.mae) + parseFloat(femaleMetrics.mae)) / 2).toFixed(2),
+        rmse: ((parseFloat(maleMetrics.rmse) + parseFloat(femaleMetrics.rmse)) / 2).toFixed(2),
+        mape: ((parseFloat(maleMetrics.mape) + parseFloat(femaleMetrics.mape)) / 2).toFixed(2),
+        r2: ((parseFloat(maleMetrics.r2) + parseFloat(femaleMetrics.r2)) / 2).toFixed(4),
+        accuracy: ((parseFloat(maleMetrics.accuracy) + parseFloat(femaleMetrics.accuracy)) / 2).toFixed(2),
+        male: maleMetrics,
+        female: femaleMetrics
+      };
       setMetrics(calculatedMetrics);
 
       const newMetadata = {
         modelType: 'LSTM',
         lookback: LOOKBACK,
         features: FEATURES,
-        target: TARGET,
+        targets: TARGETS,
         mins,
         maxs,
         lastYear: cleanedData[cleanedData.length - 1].year,
@@ -84,7 +123,7 @@ export default function LSTMForecast({ data }) {
       setModel(newModel);
       setMetadata(newMetadata);
 
-      alert(`LSTM model trained successfully!\nMAE: ${calculatedMetrics.mae}\nAccuracy: ${calculatedMetrics.accuracy}%`);
+      alert(`LSTM model trained successfully!\nOverall MAE: ${calculatedMetrics.mae}\nOverall Accuracy: ${calculatedMetrics.accuracy}%`);
     } catch (error) {
       console.error('Training error:', error);
       alert('Error training model: ' + error.message);
@@ -151,39 +190,51 @@ export default function LSTMForecast({ data }) {
       const { mins, maxs, lastData } = metadata;
       let currentSequence = lastData.map(row => ({
         year: row.year,
-        emigrants: row.emigrants
+        male: row.male || 0,
+        female: row.female || 0
       }));
 
       const predictions = [];
       let currentYear = metadata.lastYear;
 
       for (let i = 0; i < forecastYears; i++) {
+        // Normalize current sequence
         const normalized = currentSequence.map(row => ({
-          emigrants: (row.emigrants - mins.emigrants) / (maxs.emigrants - mins.emigrants)
+          male: (row.male - mins.male) / (maxs.male - mins.male),
+          female: (row.female - mins.female) / (maxs.female - mins.female)
         }));
 
+        // Prepare input
         const input = [normalized.map(row => FEATURES.map(f => row[f]))];
         const normalizedPred = await predictLSTM(model, input);
-        const predictedEmigrants = denormalize(normalizedPred[0], mins[TARGET], maxs[TARGET]);
+        
+        // Denormalize predictions (should be [male, female])
+        const pred = Array.isArray(normalizedPred[0]) ? normalizedPred[0] : [normalizedPred[0], normalizedPred[0]];
+        const predictedMale = denormalize(pred[0], mins.male, maxs.male);
+        const predictedFemale = denormalize(pred[1], mins.female, maxs.female);
 
         currentYear++;
         predictions.push({
           year: currentYear.toString(),
-          emigrants: Math.round(predictedEmigrants),
+          male: Math.round(predictedMale),
+          female: Math.round(predictedFemale),
+          emigrants: Math.round(predictedMale + predictedFemale), // Total for backward compatibility
           isForecast: true
         });
 
+        // Update sequence (sliding window)
         currentSequence = [
           ...currentSequence.slice(1),
           {
             year: currentYear,
-            emigrants: predictedEmigrants
+            male: predictedMale,
+            female: predictedFemale
           }
         ];
       }
 
       setForecasts(predictions);
-      alert(`Generated ${forecastYears} year LSTM forecast!`);
+      alert(`Generated ${forecastYears} year LSTM forecast for both male and female!`);
     } catch (error) {
       console.error('Forecasting error:', error);
       alert('Error generating forecast: ' + error.message);
@@ -245,8 +296,8 @@ export default function LSTMForecast({ data }) {
       {metrics && !isTraining && (
         <>
           <div className="bg-green-50 border-l-4 border-green-500 p-6 mb-6 rounded-md">
-            <h3 className="text-green-700 mb-4 text-xl">LSTM Model Performance Metrics</h3>
-            <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-5">
+            <h3 className="text-green-700 mb-4 text-xl">LSTM Model Performance Metrics (Overall Average)</h3>
+            <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-5 mb-6">
               <div className="flex flex-col p-4 bg-white rounded-md shadow-sm">
                 <span className="text-sm text-gray-600 mb-2">MAE:</span>
                 <span className="text-2xl font-bold text-gray-800">{metrics.mae}</span>
@@ -268,6 +319,30 @@ export default function LSTMForecast({ data }) {
                 <span className="text-2xl font-bold text-gray-800">{metrics.accuracy}%</span>
               </div>
             </div>
+            {metrics.male && metrics.female && (
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="bg-blue-50 p-4 rounded-md">
+                  <h4 className="text-blue-700 font-semibold mb-3">Male Metrics</h4>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div>MAE: <span className="font-bold">{metrics.male.mae}</span></div>
+                    <div>RMSE: <span className="font-bold">{metrics.male.rmse}</span></div>
+                    <div>MAPE: <span className="font-bold">{metrics.male.mape}%</span></div>
+                    <div>R²: <span className="font-bold">{metrics.male.r2}</span></div>
+                    <div className="col-span-2">Accuracy: <span className="font-bold">{metrics.male.accuracy}%</span></div>
+                  </div>
+                </div>
+                <div className="bg-pink-50 p-4 rounded-md">
+                  <h4 className="text-pink-700 font-semibold mb-3">Female Metrics</h4>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div>MAE: <span className="font-bold">{metrics.female.mae}</span></div>
+                    <div>RMSE: <span className="font-bold">{metrics.female.rmse}</span></div>
+                    <div>MAPE: <span className="font-bold">{metrics.female.mape}%</span></div>
+                    <div>R²: <span className="font-bold">{metrics.female.r2}</span></div>
+                    <div className="col-span-2">Accuracy: <span className="font-bold">{metrics.female.accuracy}%</span></div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {validationResults.length > 0 && (
@@ -278,19 +353,27 @@ export default function LSTMForecast({ data }) {
                   <thead>
                     <tr>
                       <th className="p-3 text-left border-b border-gray-200 bg-teal-500 text-white font-semibold sticky top-0 z-10">Year</th>
-                      <th className="p-3 text-left border-b border-gray-200 bg-teal-500 text-white font-semibold sticky top-0 z-10">Actual Emigrants</th>
-                      <th className="p-3 text-left border-b border-gray-200 bg-teal-500 text-white font-semibold sticky top-0 z-10">Predicted Emigrants</th>
-                      <th className="p-3 text-left border-b border-gray-200 bg-teal-500 text-white font-semibold sticky top-0 z-10">Error</th>
+                      <th className="p-3 text-left border-b border-gray-200 bg-teal-500 text-white font-semibold sticky top-0 z-10">Actual Male</th>
+                      <th className="p-3 text-left border-b border-gray-200 bg-teal-500 text-white font-semibold sticky top-0 z-10">Predicted Male</th>
+                      <th className="p-3 text-left border-b border-gray-200 bg-teal-500 text-white font-semibold sticky top-0 z-10">Error Male</th>
+                      <th className="p-3 text-left border-b border-gray-200 bg-teal-500 text-white font-semibold sticky top-0 z-10">Actual Female</th>
+                      <th className="p-3 text-left border-b border-gray-200 bg-teal-500 text-white font-semibold sticky top-0 z-10">Predicted Female</th>
+                      <th className="p-3 text-left border-b border-gray-200 bg-teal-500 text-white font-semibold sticky top-0 z-10">Error Female</th>
                     </tr>
                   </thead>
                   <tbody>
                     {validationResults.map((row, i) => (
                       <tr key={i} className="hover:bg-gray-100 last:border-b-0">
                         <td className="p-3 text-left border-b border-gray-200">{row.year}</td>
-                        <td className="p-3 text-left border-b border-gray-200">{row.actual.toLocaleString()}</td>
-                        <td className="p-3 text-left border-b border-gray-200">{row.predicted.toLocaleString()}</td>
-                        <td className={`p-3 text-left border-b border-gray-200 font-semibold ${row.error >= 0 ? 'text-red-600' : 'text-green-600'}`}>
-                          {row.error >= 0 ? '+' : ''}{row.error.toLocaleString()}
+                        <td className="p-3 text-left border-b border-gray-200">{row.actualMale.toLocaleString()}</td>
+                        <td className="p-3 text-left border-b border-gray-200">{row.predictedMale.toLocaleString()}</td>
+                        <td className={`p-3 text-left border-b border-gray-200 font-semibold ${row.errorMale >= 0 ? 'text-red-600' : 'text-green-600'}`}>
+                          {row.errorMale >= 0 ? '+' : ''}{row.errorMale.toLocaleString()}
+                        </td>
+                        <td className="p-3 text-left border-b border-gray-200">{row.actualFemale.toLocaleString()}</td>
+                        <td className="p-3 text-left border-b border-gray-200">{row.predictedFemale.toLocaleString()}</td>
+                        <td className={`p-3 text-left border-b border-gray-200 font-semibold ${row.errorFemale >= 0 ? 'text-red-600' : 'text-green-600'}`}>
+                          {row.errorFemale >= 0 ? '+' : ''}{row.errorFemale.toLocaleString()}
                         </td>
                       </tr>
                     ))}
@@ -330,7 +413,7 @@ export default function LSTMForecast({ data }) {
       {forecasts.length > 0 && (
         <>
           <div className="mb-6">
-            <h3 className="text-gray-800 mb-4 text-xl">LSTM: Historical + Forecast</h3>
+            <h3 className="text-gray-800 mb-4 text-xl">LSTM: Historical + Forecast (Male & Female)</h3>
             <ResponsiveContainer width="100%" height={400}>
               <LineChart
                 data={chartData}
@@ -345,28 +428,47 @@ export default function LSTMForecast({ data }) {
                 <Legend />
                 <Line
                   type="monotone"
-                  dataKey={(entry) => entry.isForecast ? null : entry.emigrants}
-                  stroke="#82ca9d"
+                  dataKey="male"
+                  stroke="#3b82f6"
                   strokeWidth={2}
-                  name="Emigrants (Historical)"
+                  name="Male (Historical)"
+                  dot={{ r: 3 }}
+                  activeDot={{ r: 5 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="female"
+                  stroke="#ec4899"
+                  strokeWidth={2}
+                  name="Female (Historical)"
+                  dot={{ r: 3 }}
+                  activeDot={{ r: 5 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey={(entry) => entry.isForecast ? entry.male : null}
+                  stroke="#3b82f6"
+                  strokeWidth={2}
+                  strokeDasharray="5 5"
+                  name="Male (Forecast)"
                   dot={(props) => {
                     const { cx, cy, payload } = props;
-                    if (payload.isForecast || !payload.emigrants) return null;
-                    return <circle cx={cx} cy={cy} r={3} fill="#82ca9d" />;
+                    if (!payload.isForecast || !payload.male) return null;
+                    return <circle cx={cx} cy={cy} r={4} fill="#3b82f6" />;
                   }}
                   connectNulls={false}
                 />
                 <Line
                   type="monotone"
-                  dataKey={(entry) => entry.isForecast ? entry.emigrants : null}
-                  stroke="#ff6b6b"
+                  dataKey={(entry) => entry.isForecast ? entry.female : null}
+                  stroke="#ec4899"
                   strokeWidth={2}
                   strokeDasharray="5 5"
-                  name="Emigrants (LSTM Forecast)"
+                  name="Female (Forecast)"
                   dot={(props) => {
                     const { cx, cy, payload } = props;
-                    if (!payload.isForecast || !payload.emigrants) return null;
-                    return <circle cx={cx} cy={cy} r={4} fill="#ff6b6b" />;
+                    if (!payload.isForecast || !payload.female) return null;
+                    return <circle cx={cx} cy={cy} r={4} fill="#ec4899" />;
                   }}
                   connectNulls={false}
                 />
@@ -380,14 +482,18 @@ export default function LSTMForecast({ data }) {
               <thead>
                 <tr>
                   <th className="p-3 text-left border-b border-gray-200 bg-pink-500 text-white font-semibold">Year</th>
-                  <th className="p-3 text-left border-b border-gray-200 bg-pink-500 text-white font-semibold">Predicted Emigrants</th>
+                  <th className="p-3 text-left border-b border-gray-200 bg-pink-500 text-white font-semibold">Predicted Male</th>
+                  <th className="p-3 text-left border-b border-gray-200 bg-pink-500 text-white font-semibold">Predicted Female</th>
+                  <th className="p-3 text-left border-b border-gray-200 bg-pink-500 text-white font-semibold">Total</th>
                 </tr>
               </thead>
               <tbody>
                 {forecasts.map((f, i) => (
                   <tr key={i} className="hover:bg-gray-100 last:border-b-0">
                     <td className="p-3 text-left border-b border-gray-200">{f.year}</td>
-                    <td className="p-3 text-left border-b border-gray-200">{f.emigrants.toLocaleString()}</td>
+                    <td className="p-3 text-left border-b border-gray-200">{f.male.toLocaleString()}</td>
+                    <td className="p-3 text-left border-b border-gray-200">{f.female.toLocaleString()}</td>
+                    <td className="p-3 text-left border-b border-gray-200 font-semibold">{(f.male + f.female).toLocaleString()}</td>
                   </tr>
                 ))}
               </tbody>
@@ -399,11 +505,12 @@ export default function LSTMForecast({ data }) {
       <div className="bg-indigo-50 border-l-4 border-indigo-500 p-6 rounded-md">
         <h4 className="text-indigo-800 mb-4 text-lg">LSTM Model Configuration</h4>
         <ul className="list-none p-0 m-0">
-          <li className="py-2 text-gray-800 border-b border-indigo-200">Architecture: 2 LSTM layers (50 units each)</li>
+          <li className="py-2 text-gray-800 border-b border-indigo-200">Architecture: 2 LSTM layers (60 units each)</li>
           <li className="py-2 text-gray-800 border-b border-indigo-200">Lookback window: {LOOKBACK} years</li>
-          <li className="py-2 text-gray-800 border-b border-indigo-200">Input features: Emigrants (historical values)</li>
-          <li className="py-2 text-gray-800 border-b border-indigo-200">Target: Emigrants (next year)</li>
-          <li className="py-2 text-gray-800 border-b border-indigo-200">Dropout: 0.2</li>
+          <li className="py-2 text-gray-800 border-b border-indigo-200">Input features: Male & Female (historical values)</li>
+          <li className="py-2 text-gray-800 border-b border-indigo-200">Targets: Male & Female (next year)</li>
+          <li className="py-2 text-gray-800 border-b border-indigo-200">Output units: 2 (male and female)</li>
+          <li className="py-2 text-gray-800 border-b border-indigo-200">Dropout: 0.3</li>
           <li className="py-2 text-gray-800 border-b-0">Epochs: 100 | Validation split: 20%</li>
         </ul>
       </div>

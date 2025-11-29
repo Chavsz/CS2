@@ -13,8 +13,8 @@ export default function ForecastPanel({ data, onForecastUpdate }) {
   const [forecasts, setForecasts] = useState(null);
 
   const LOOKBACK = 2;
-  const FEATURES = ['population', 'emigrants'];
-  const TARGET = 'emigrants';
+  const FEATURES = ['male', 'female'];
+  const TARGETS = ['male', 'female'];
 
   const handleTrain = async () => {
     setIsTraining(true);
@@ -30,12 +30,12 @@ export default function ForecastPanel({ data, onForecastUpdate }) {
       const { normalized, mins, maxs } = normalizeData(cleanedData, FEATURES);
 
       // 3. Create sequences
-      const { X, y } = createSequences(normalized, LOOKBACK, FEATURES, TARGET);
+      const { X, y } = createSequences(normalized, LOOKBACK, FEATURES, TARGETS);
 
       // 4. Build model
       const newModel = modelType === 'LSTM'
-        ? buildLSTMModel(LOOKBACK, FEATURES.length)
-        : buildMLPModel(LOOKBACK, FEATURES.length);
+        ? buildLSTMModel(LOOKBACK, FEATURES.length, TARGETS.length)
+        : buildLSTMModel(LOOKBACK, FEATURES.length, TARGETS.length); // Fallback to LSTM if MLP not available
 
       // 5. Train model
       const onEpochEnd = (epoch, logs) => {
@@ -48,24 +48,50 @@ export default function ForecastPanel({ data, onForecastUpdate }) {
         });
       };
 
-      const trainFn = modelType === 'LSTM' ? trainLSTMModel : trainMLPModel;
-      await trainFn(newModel, X, y, onEpochEnd, 100, 0.2);
+      await trainLSTMModel(newModel, X, y, onEpochEnd, 100, 0.2);
 
       // 6. Make predictions on training data
-      const predictFn = modelType === 'LSTM' ? predictLSTM : predictMLP;
-      const normalizedPredictions = await predictFn(newModel, X);
+      const normalizedPredictions = await predictLSTM(newModel, X);
 
-      // 7. Denormalize predictions
-      const predictions = normalizedPredictions.map(pred =>
-        denormalize(pred, mins[TARGET], maxs[TARGET])
-      );
+      // 7. Denormalize predictions (handle multiple targets)
+      const predictions = normalizedPredictions.map(pred => {
+        if (Array.isArray(pred)) {
+          return {
+            male: denormalize(pred[0], mins.male, maxs.male),
+            female: denormalize(pred[1], mins.female, maxs.female)
+          };
+        }
+        return { male: 0, female: 0 };
+      });
 
-      const actualValues = y.map(val =>
-        denormalize(val, mins[TARGET], maxs[TARGET])
-      );
+      const actualValues = y.map(val => {
+        if (Array.isArray(val)) {
+          return {
+            male: denormalize(val[0], mins.male, maxs.male),
+            female: denormalize(val[1], mins.female, maxs.female)
+          };
+        }
+        return { male: 0, female: 0 };
+      });
 
-      // 8. Calculate metrics
-      const calculatedMetrics = calculateMetrics(actualValues, predictions);
+      // 8. Calculate metrics for both targets
+      const maleActual = actualValues.map(v => v.male);
+      const malePred = predictions.map(p => p.male);
+      const femaleActual = actualValues.map(v => v.female);
+      const femalePred = predictions.map(p => p.female);
+
+      const maleMetrics = calculateMetrics(maleActual, malePred);
+      const femaleMetrics = calculateMetrics(femaleActual, femalePred);
+
+      const calculatedMetrics = {
+        mae: ((parseFloat(maleMetrics.mae) + parseFloat(femaleMetrics.mae)) / 2).toFixed(2),
+        rmse: ((parseFloat(maleMetrics.rmse) + parseFloat(femaleMetrics.rmse)) / 2).toFixed(2),
+        mape: ((parseFloat(maleMetrics.mape) + parseFloat(femaleMetrics.mape)) / 2).toFixed(2),
+        r2: ((parseFloat(maleMetrics.r2) + parseFloat(femaleMetrics.r2)) / 2).toFixed(4),
+        accuracy: ((parseFloat(maleMetrics.accuracy) + parseFloat(femaleMetrics.accuracy)) / 2).toFixed(2),
+        male: maleMetrics,
+        female: femaleMetrics
+      };
       setMetrics(calculatedMetrics);
 
       // 9. Save metadata
@@ -73,7 +99,7 @@ export default function ForecastPanel({ data, onForecastUpdate }) {
         modelType,
         lookback: LOOKBACK,
         features: FEATURES,
-        target: TARGET,
+        targets: TARGETS,
         mins,
         maxs,
         lastYear: cleanedData[cleanedData.length - 1].year,
@@ -83,8 +109,7 @@ export default function ForecastPanel({ data, onForecastUpdate }) {
       };
 
       // 10. Save model
-      const saveFn = modelType === 'LSTM' ? saveLSTMModel : saveMLPModel;
-      await saveFn(newModel, newMetadata);
+      await saveLSTMModel(newModel, newMetadata);
 
       setModel(newModel);
       setMetadata(newMetadata);
@@ -100,8 +125,7 @@ export default function ForecastPanel({ data, onForecastUpdate }) {
 
   const handleLoadModel = async () => {
     try {
-      const loadFn = modelType === 'LSTM' ? loadLSTMModel : loadMLPModel;
-      const result = await loadFn();
+      const result = await loadLSTMModel();
 
       if (result) {
         setModel(result.model);
@@ -121,8 +145,7 @@ export default function ForecastPanel({ data, onForecastUpdate }) {
     if (!confirm('Are you sure you want to delete the saved model?')) return;
 
     try {
-      const deleteFn = modelType === 'LSTM' ? deleteLSTMModel : deleteMLPModel;
-      await deleteFn();
+      await deleteLSTMModel();
       setModel(null);
       setMetadata(null);
       setMetrics(null);
@@ -141,8 +164,7 @@ export default function ForecastPanel({ data, onForecastUpdate }) {
     }
 
     try {
-      const downloadFn = modelType === 'LSTM' ? downloadLSTMModel : downloadMLPModel;
-      await downloadFn(model, metadata);
+      await downloadLSTMModel(model, metadata);
       alert('Model files downloaded!');
     } catch (error) {
       console.error('Error downloading model:', error);
@@ -160,8 +182,8 @@ export default function ForecastPanel({ data, onForecastUpdate }) {
       const { mins, maxs, lastData } = metadata;
       let currentSequence = lastData.map(row => ({
         year: row.year,
-        population: row.population,
-        emigrants: row.emigrants
+        male: row.male || 0,
+        female: row.female || 0
       }));
 
       const predictions = [];
@@ -170,30 +192,27 @@ export default function ForecastPanel({ data, onForecastUpdate }) {
       for (let i = 0; i < forecastYears; i++) {
         // Normalize current sequence
         const normalized = currentSequence.map(row => ({
-          population: (row.population - mins.population) / (maxs.population - mins.population),
-          emigrants: (row.emigrants - mins.emigrants) / (maxs.emigrants - mins.emigrants)
+          male: (row.male - mins.male) / (maxs.male - mins.male),
+          female: (row.female - mins.female) / (maxs.female - mins.female)
         }));
 
         // Prepare input
         const input = [normalized.map(row => FEATURES.map(f => row[f]))];
 
         // Predict
-        const predictFn = modelType === 'LSTM' ? predictLSTM : predictMLP;
-        const normalizedPred = await predictFn(model, input);
+        const normalizedPred = await predictLSTM(model, input);
 
-        // Denormalize
-        const predictedEmigrants = denormalize(normalizedPred[0], mins[TARGET], maxs[TARGET]);
-
-        // Estimate population growth (simple linear trend)
-        const popGrowth = currentSequence[LOOKBACK - 1].population - currentSequence[0].population;
-        const avgGrowthRate = popGrowth / (LOOKBACK - 1);
-        const nextPopulation = currentSequence[LOOKBACK - 1].population + avgGrowthRate;
+        // Denormalize (should be [male, female])
+        const pred = Array.isArray(normalizedPred[0]) ? normalizedPred[0] : [normalizedPred[0], normalizedPred[0]];
+        const predictedMale = denormalize(pred[0], mins.male, maxs.male);
+        const predictedFemale = denormalize(pred[1], mins.female, maxs.female);
 
         currentYear++;
         predictions.push({
           year: currentYear.toString(),
-          emigrants: Math.round(predictedEmigrants),
-          population: parseFloat(nextPopulation.toFixed(2)),
+          male: Math.round(predictedMale),
+          female: Math.round(predictedFemale),
+          emigrants: Math.round(predictedMale + predictedFemale), // Total for backward compatibility
           isForecast: true
         });
 
@@ -202,8 +221,8 @@ export default function ForecastPanel({ data, onForecastUpdate }) {
           ...currentSequence.slice(1),
           {
             year: currentYear,
-            population: nextPopulation,
-            emigrants: predictedEmigrants
+            male: predictedMale,
+            female: predictedFemale
           }
         ];
       }
@@ -382,16 +401,18 @@ export default function ForecastPanel({ data, onForecastUpdate }) {
             <thead>
               <tr>
                 <th className="p-3 text-left border-b border-gray-200 bg-pink-500 text-white font-semibold">Year</th>
-                <th className="p-3 text-left border-b border-gray-200 bg-pink-500 text-white font-semibold">Predicted Emigrants</th>
-                <th className="p-3 text-left border-b border-gray-200 bg-pink-500 text-white font-semibold">Estimated Population (M)</th>
+                <th className="p-3 text-left border-b border-gray-200 bg-pink-500 text-white font-semibold">Predicted Male</th>
+                <th className="p-3 text-left border-b border-gray-200 bg-pink-500 text-white font-semibold">Predicted Female</th>
+                <th className="p-3 text-left border-b border-gray-200 bg-pink-500 text-white font-semibold">Total</th>
               </tr>
             </thead>
             <tbody>
               {forecasts.map((f, i) => (
                 <tr key={i} className="hover:bg-gray-100 last:border-b-0">
                   <td className="p-3 text-left border-b border-gray-200">{f.year}</td>
-                  <td className="p-3 text-left border-b border-gray-200">{f.emigrants.toLocaleString()}</td>
-                  <td className="p-3 text-left border-b border-gray-200">{f.population.toFixed(2)}</td>
+                  <td className="p-3 text-left border-b border-gray-200">{f.male.toLocaleString()}</td>
+                  <td className="p-3 text-left border-b border-gray-200">{f.female.toLocaleString()}</td>
+                  <td className="p-3 text-left border-b border-gray-200 font-semibold">{(f.male + f.female).toLocaleString()}</td>
                 </tr>
               ))}
             </tbody>
@@ -403,8 +424,9 @@ export default function ForecastPanel({ data, onForecastUpdate }) {
         <h4 className="text-indigo-800 mb-4 text-lg">Model Configuration</h4>
         <ul className="list-none p-0 m-0">
           <li className="py-2 text-gray-800 border-b border-indigo-200">Lookback window: {LOOKBACK} years</li>
-          <li className="py-2 text-gray-800 border-b border-indigo-200">Input features: Population, Emigrants</li>
-          <li className="py-2 text-gray-800 border-b border-indigo-200">Target: Emigrants (next year)</li>
+          <li className="py-2 text-gray-800 border-b border-indigo-200">Input features: Male & Female</li>
+          <li className="py-2 text-gray-800 border-b border-indigo-200">Targets: Male & Female (next year)</li>
+          <li className="py-2 text-gray-800 border-b border-indigo-200">Output units: 2 (male and female)</li>
           <li className="py-2 text-gray-800 border-b border-indigo-200">Normalization: Min-Max [0, 1]</li>
           <li className="py-2 text-gray-800 border-b border-indigo-200">Epochs: 100</li>
           <li className="py-2 text-gray-800 border-b-0">Validation split: 20%</li>

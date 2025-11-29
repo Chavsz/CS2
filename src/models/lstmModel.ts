@@ -4,14 +4,14 @@ import * as tf from '@tensorflow/tfjs';
  * Build LSTM Model for Time Series Forecasting
  * Architecture:
  * - Input: [lookback, features] e.g., [3, 2] for 3 years × 2 features
- * - LSTM Layer 1: 50 units with dropout 0.2
- * - LSTM Layer 2: 50 units with dropout 0.2
- * - Dense Output: 1 unit (emigrants prediction)
+ * - LSTM Layer 1: 60 units with dropout 0.3
+ * - LSTM Layer 2: 60 units with dropout 0.3
+ * - Dense Output: outputUnits (1 for single target, 2 for male/female)
  * - Loss: MSE (Mean Squared Error)
  * - Optimizer: Adam (lr=0.001)
  * - Metrics: MAE (Mean Absolute Error)
  */
-export function buildLSTMModel(lookback = 2, features = 2) {
+export function buildLSTMModel(lookback = 2, features = 2, outputUnits = 2) {
   const model = tf.sequential();
 
   // First LSTM layer
@@ -28,9 +28,9 @@ export function buildLSTMModel(lookback = 2, features = 2) {
     dropout: 0.3
   }));
 
-  // Output layer
+  // Output layer - supports multiple outputs (e.g., male and female)
   model.add(tf.layers.dense({
-    units: 1
+    units: outputUnits
   }));
 
   // Compile model
@@ -47,7 +47,7 @@ export function buildLSTMModel(lookback = 2, features = 2) {
  * Train LSTM Model
  * @param {tf.Sequential} model - The LSTM model
  * @param {Array} X - Input sequences
- * @param {Array} y - Target values
+ * @param {Array} y - Target values (can be 1D array for single target or 2D array for multiple targets)
  * @param {Function} onEpochEnd - Callback for epoch progress
  * @param {number} epochs - Number of training epochs (default: 100)
  * @param {number} validationSplit - Validation split ratio (default: 0.2)
@@ -55,7 +55,19 @@ export function buildLSTMModel(lookback = 2, features = 2) {
 export async function trainLSTMModel(model, X, y, onEpochEnd, epochs = 100, validationSplit = 0.2) {
   // Convert to tensors
   const xs = tf.tensor3d(X);
-  const ys = tf.tensor2d(y, [y.length, 1]);
+  
+  // Handle both single target (1D array) and multiple targets (2D array)
+  let ys;
+  if (Array.isArray(y[0]) && Array.isArray(y[0])) {
+    // Multiple targets: y is already 2D array
+    ys = tf.tensor2d(y);
+  } else if (Array.isArray(y[0]) && typeof y[0] === 'number') {
+    // Single target: y is 1D array, convert to 2D
+    ys = tf.tensor2d(y, [y.length, 1]);
+  } else {
+    // Fallback: assume single target
+    ys = tf.tensor2d(y, [y.length, 1]);
+  }
 
   // Determine batch size
   const batchSize = Math.min(32, X.length);
@@ -83,6 +95,7 @@ export async function trainLSTMModel(model, X, y, onEpochEnd, epochs = 100, vali
 
 /**
  * Make predictions using LSTM model
+ * Returns array of predictions (each prediction can be single value or array for multiple targets)
  */
 export async function predictLSTM(model, X) {
   const xs = tf.tensor3d(X);
@@ -92,7 +105,15 @@ export async function predictLSTM(model, X) {
   xs.dispose();
   predictions.dispose();
 
-  return result.map(r => r[0]);
+  // If output is 2D (multiple targets), return as-is
+  // If output is 1D (single target), return flattened
+  if (Array.isArray(result[0]) && result[0].length > 1) {
+    // Multiple targets: return 2D array
+    return result;
+  } else {
+    // Single target: return 1D array (backward compatibility)
+    return result.map(r => Array.isArray(r) ? r[0] : r);
+  }
 }
 
 /**
