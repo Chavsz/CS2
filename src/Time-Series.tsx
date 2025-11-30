@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
-import * as XLSX from 'xlsx'
 import LSTMForecast from './forecast_components/LSTMForecast'
+import { getSexes, type SexRecord } from './services/sex'
 import './App.css'
 
 interface DataRow {
@@ -18,73 +18,33 @@ function TimeSeries() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const response = await fetch('/Emigrant-1981-2020-Sex.xlsx')
-        const arrayBuffer = await response.arrayBuffer()
-        const workbook = XLSX.read(arrayBuffer, { type: 'array' })
-        const sheetName = workbook.SheetNames[0]
-        const worksheet = workbook.Sheets[sheetName]
+        // Fetch data from Firebase
+        const sexRecords = await getSexes()
         
-        // Try object format with header
-        const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: null })
-        
-        // Transform data to handle various column name formats
-        const transformedData: DataRow[] = jsonData.map((row: any) => {
-          // Get all keys to find the right columns
-          const keys = Object.keys(row)
-          
-          // Find year column (case-insensitive, handle spaces)
-          const yearKey = keys.find(k => 
-            k.toLowerCase().replace(/\s+/g, '').includes('year')
-          ) || keys.find(k => /year/i.test(k))
-          
-          // Find male column
-          const maleKey = keys.find(k => 
-            k.toLowerCase().replace(/\s+/g, '').includes('male') && 
-            !k.toLowerCase().replace(/\s+/g, '').includes('female')
-          ) || keys.find(k => /^male$/i.test(k.replace(/\s+/g, '')))
-          
-          // Find female column
-          const femaleKey = keys.find(k => 
-            k.toLowerCase().replace(/\s+/g, '').includes('female')
-          ) || keys.find(k => /female/i.test(k))
-          
-          // Try multiple possible column name formats
-          const year = yearKey ? row[yearKey] : (row.Year || row.year || row.YEAR || row['Year'] || row['YEAR'])
-          const male = maleKey ? row[maleKey] : (row.Male || row.male || row.MALE || row['Male'] || row['MALE'] || 0)
-          const female = femaleKey ? row[femaleKey] : (row.Female || row.female || row.FEMALE || row['Female'] || row['FEMALE'] || 0)
-          
-          // Convert to numbers
-          const yearNum = year != null ? (typeof year === 'number' ? year : parseInt(String(year), 10)) : null
-          const maleNum = male != null ? (typeof male === 'number' ? male : parseFloat(String(male))) : null
-          const femaleNum = female != null ? (typeof female === 'number' ? female : parseFloat(String(female))) : null
-          
-          // Only include valid rows
-          if (yearNum && !isNaN(yearNum) && yearNum > 1980 && yearNum < 2030) {
-            return {
-              year: yearNum,
-              male: (maleNum != null && !isNaN(maleNum)) ? maleNum : 0,
-              female: (femaleNum != null && !isNaN(femaleNum)) ? femaleNum : 0,
-              emigrants: ((maleNum != null && !isNaN(maleNum)) ? maleNum : 0) + 
-                        ((femaleNum != null && !isNaN(femaleNum)) ? femaleNum : 0)
-            }
-          }
-          return null
-        }).filter((row): row is DataRow => row !== null && row.year > 0)
+        // Transform Firebase data to match DataRow format
+        const transformedData: DataRow[] = sexRecords
+          .map((record: SexRecord) => ({
+            year: record.year,
+            male: record.male || 0,
+            female: record.female || 0,
+            emigrants: (record.male || 0) + (record.female || 0) // Total for backward compatibility
+          }))
+          .filter((row: DataRow) => row.year > 0 && row.year > 1980 && row.year < 2030)
         
         // Sort by year
         transformedData.sort((a, b) => a.year - b.year)
         
-        console.log('Transformed data count:', transformedData.length)
-        console.log('Sample transformed data:', transformedData.slice(0, 5))
+        console.log('Loaded data from Firebase:', transformedData.length, 'records')
+        console.log('Sample data:', transformedData.slice(0, 5))
         
         if (transformedData.length === 0) {
-          console.warn('No valid data found. Available columns:', jsonData.length > 0 ? Object.keys(jsonData[0] as any) : 'No data')
+          console.warn('No valid data found in Firebase. Please ensure sex data is uploaded.')
         }
         
         setData(transformedData)
         setLoading(false)
       } catch (error) {
-        console.error('Error loading data:', error)
+        console.error('Error loading data from Firebase:', error)
         setLoading(false)
       }
     }
@@ -161,8 +121,9 @@ function TimeSeries() {
             <div className="text-red-600">
               <p>⚠️ No data loaded. Please check:</p>
               <ul className="list-disc list-inside mt-2">
-                <li>Excel file exists at: /Emigrant-1981-2020-Sex.xlsx</li>
-                <li>File contains columns: Year, Male, Female</li>
+                <li>Firebase connection is working</li>
+                <li>Sex data is uploaded to Firebase</li>
+                <li>Data contains valid year, male, and female fields</li>
                 <li>Check browser console for detailed error messages</li>
               </ul>
             </div>

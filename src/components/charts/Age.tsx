@@ -152,7 +152,6 @@ const Age = () => {
                   name={ageGroupLabels[key]}
                   stroke={ageGroupColors[key]}
                   strokeWidth={2}
-                  dot={false}
                   connectNulls
                 />
               ))}
@@ -163,7 +162,6 @@ const Age = () => {
                   name={ageGroupLabels.total}
                   stroke={ageGroupColors.total}
                   strokeWidth={3}
-                  dot={false}
                 />
               )}
             </LineChart>
