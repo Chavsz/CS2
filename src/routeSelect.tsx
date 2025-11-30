@@ -10,6 +10,7 @@ const RouteSelect = () => {
   const [selected, setSelected] = useState(window.location.pathname);
   const [isDashboardExpanded, setIsDashboardExpanded] = useState(false);
   const [isRecordsExpanded, setIsRecordsExpanded] = useState(false);
+  const [isTimeseriesExpanded, setIsTimeseriesExpanded] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -24,11 +25,19 @@ const RouteSelect = () => {
     else if (location.pathname === "/records") {
       setIsRecordsExpanded(true);
       setIsDashboardExpanded(false);
+      setIsTimeseriesExpanded(false);
+    }
+    // Auto-expand timeseries if we're on timeseries route
+    else if (location.pathname === "/timeseries") {
+      setIsTimeseriesExpanded(true);
+      setIsDashboardExpanded(false);
+      setIsRecordsExpanded(false);
     }
     // Close all dropdowns when navigating to other routes
     else {
       setIsDashboardExpanded(false);
       setIsRecordsExpanded(false);
+      setIsTimeseriesExpanded(false);
     }
   }, [location.pathname]);
 
@@ -37,12 +46,14 @@ const RouteSelect = () => {
     // Close all dropdowns when selecting other routes
     setIsDashboardExpanded(false);
     setIsRecordsExpanded(false);
+    setIsTimeseriesExpanded(false);
   };
 
   const handleDashboardClick = (e: React.MouseEvent) => {
     e.preventDefault();
     setIsDashboardExpanded(!isDashboardExpanded);
     setIsRecordsExpanded(false);
+    setIsTimeseriesExpanded(false);
     if (!isDashboardExpanded) {
       navigate("/?dataset=Age");
     }
@@ -52,8 +63,19 @@ const RouteSelect = () => {
     e.preventDefault();
     setIsRecordsExpanded(!isRecordsExpanded);
     setIsDashboardExpanded(false);
+    setIsTimeseriesExpanded(false);
     if (!isRecordsExpanded) {
       navigate("/records?dataset=Age");
+    }
+  };
+
+  const handleTimeseriesClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsTimeseriesExpanded(!isTimeseriesExpanded);
+    setIsDashboardExpanded(false);
+    setIsRecordsExpanded(false);
+    if (!isTimeseriesExpanded) {
+      navigate("/timeseries?dataset=Age");
     }
   };
 
@@ -202,13 +224,69 @@ const RouteSelect = () => {
           </div>
         </div>
       </div>
-      <Route
-        to="/timeseries"
-        selected={selected}
-        Icon={GoGraph}
-        title="Time Series"
-        handleSelect={handleSelect}
-      />
+      <div>
+        <button
+          onClick={handleTimeseriesClick}
+          className={`flex items-center md:justify-start justify-center gap-2 w-full rounded px-2 py-2 md:py-1.5 md:text-sm text-1xl transition-all duration-300 ${
+            selected === "/timeseries"
+              ? "bg-stone-100 text-[#696969] shadow"
+              : "hover:bg-stone-100 text-[#696969] shadow-none"
+          }`}
+        >
+          <GoGraph
+            className={`${selected === "/timeseries" ? "text-[#696969] " : ""}`}
+          />
+          <p className="text-md font-semibold hidden md:block flex-1 text-left">
+            Time Series
+          </p>
+          <svg
+            className={`w-4 h-4 transition-transform duration-300 hidden md:block ${
+              isTimeseriesExpanded ? "rotate-180" : ""
+            }`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M19 9l-7 7-7-7"
+            />
+          </svg>
+        </button>
+        <div
+          className={`overflow-hidden transition-all duration-700 ${
+            isTimeseriesExpanded ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+          }`}
+        >
+          <div className="ml-4 mt-1 space-y-1 hidden md:block">
+            {datasetOptions.map((option) => {
+              const isSelected =
+                option.value === currentDataset &&
+                location.pathname === "/timeseries";
+              return (
+                <button
+                  key={option.value}
+                  onClick={() =>
+                    handleDatasetSelect(option.value, "/timeseries")
+                  }
+                  className={`w-full flex items-center justify-between px-2 py-1.5 rounded text-sm transition-colors duration-300 ${
+                    isSelected
+                      ? "bg-indigo-50 text-indigo-600"
+                      : "text-[#696969] hover:bg-stone-50"
+                  }`}
+                >
+                  <span className="text-left">{option.label}</span>
+                  {isSelected && (
+                    <IoCheckmarkDone className="w-4 h-4 text-indigo-600" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
