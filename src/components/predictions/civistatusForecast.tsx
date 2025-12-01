@@ -1,17 +1,20 @@
 import { useState, useEffect } from 'react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import LSTMForecast from '../../forecast_components/LSTMForecast'
-import { getSexes, type SexRecord } from '../../services/sex'
+import { getCivilStatuses, type CivilStatusRecord } from '../../services/civilStatus'
 import '../../App.css'
 
 interface DataRow {
   year: number;
-  male: number;
-  female: number;
-  emigrants: number;
+  single: number;
+  married: number;
+  widower: number;
+  separated: number;
+  divorced: number;
+  emigrants: number; // Total for backward compatibility
 }
 
-function SexForecast() {
+function CivilStatusForecast() {
   const [data, setData] = useState<DataRow[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -19,15 +22,19 @@ function SexForecast() {
     const loadData = async () => {
       try {
         // Fetch data from Firebase
-        const sexRecords = await getSexes()
+        const civilStatusRecords = await getCivilStatuses()
         
-        // Transform Firebase data to match DataRow format
-        const transformedData: DataRow[] = sexRecords
-          .map((record: SexRecord) => ({
+        // Transform Firebase data to match DataRow format (excluding notReported)
+        const transformedData: DataRow[] = civilStatusRecords
+          .map((record: CivilStatusRecord) => ({
             year: record.year,
-            male: record.male || 0,
-            female: record.female || 0,
-            emigrants: (record.male || 0) + (record.female || 0) // Total for backward compatibility
+            single: record.single || 0,
+            married: record.married || 0,
+            widower: record.widower || 0,
+            separated: record.separated || 0,
+            divorced: record.divorced || 0,
+            emigrants: (record.single || 0) + (record.married || 0) + (record.widower || 0) + 
+                      (record.separated || 0) + (record.divorced || 0) // Total excluding notReported
           }))
           .filter((row: DataRow) => row.year > 0 && row.year > 1980 && row.year < 2030)
         
@@ -35,7 +42,7 @@ function SexForecast() {
         transformedData.sort((a, b) => a.year - b.year)
         
         if (transformedData.length === 0) {
-          console.warn('No valid data found in Firebase. Please ensure sex data is uploaded.')
+          console.warn('No valid data found in Firebase. Please ensure civil status data is uploaded.')
         }
         
         setData(transformedData)
@@ -63,7 +70,7 @@ function SexForecast() {
 
       {/* Original Historical Data Graph */}
       <section className="original-section">
-        <h2 >Historical Data: Emigration Trends by Sex</h2>
+        <h2>Historical Data: Emigration Trends by Civil Status</h2>
         {data.length > 0 ? (
           <div className="chart-container">
             <ResponsiveContainer width="100%" height={500}>
@@ -83,19 +90,46 @@ function SexForecast() {
                 <Legend />
                 <Line
                   type="monotone"
-                  dataKey="male"
+                  dataKey="single"
                   stroke="#3b82f6"
                   strokeWidth={2}
-                  name="Male Emigrants"
+                  name="Single"
                   dot={{ r: 3.5 }}
                   activeDot={{ r: 5 }}
                 />
                 <Line
                   type="monotone"
-                  dataKey="female"
-                  stroke="#ec4899"
+                  dataKey="married"
+                  stroke="#10b981"
                   strokeWidth={2}
-                  name="Female Emigrants"
+                  name="Married"
+                  dot={{ r: 3.5 }}
+                  activeDot={{ r: 5 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="widower"
+                  stroke="#f59e0b"
+                  strokeWidth={2}
+                  name="Widower"
+                  dot={{ r: 3.5 }}
+                  activeDot={{ r: 5 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="separated"
+                  stroke="#ef4444"
+                  strokeWidth={2}
+                  name="Separated"
+                  dot={{ r: 3.5 }}
+                  activeDot={{ r: 5 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="divorced"
+                  stroke="#8b5cf6"
+                  strokeWidth={2}
+                  name="Divorced"
                   dot={{ r: 3.5 }}
                   activeDot={{ r: 5 }}
                 />
@@ -113,14 +147,15 @@ function SexForecast() {
             <>
               <p>Data shows emigrant trends from {data[0]?.year} to {data[data.length - 1]?.year}</p>
               <p>Total data points: {data.length}</p>
+              <p className="text-sm text-gray-600 mt-2">Note: Not Reported category is excluded from analysis</p>
             </>
           ) : (
             <div className="text-red-600">
               <p>⚠️ No data loaded. Please check:</p>
               <ul className="list-disc list-inside mt-2">
                 <li>Firebase connection is working</li>
-                <li>Sex data is uploaded to Firebase</li>
-                <li>Data contains valid year, male, and female fields</li>
+                <li>Civil Status data is uploaded to Firebase</li>
+                <li>Data contains valid year and civil status fields</li>
                 <li>Check browser console for detailed error messages</li>
               </ul>
             </div>
@@ -136,5 +171,5 @@ function SexForecast() {
   )
 }
 
-export default SexForecast
+export default CivilStatusForecast
 

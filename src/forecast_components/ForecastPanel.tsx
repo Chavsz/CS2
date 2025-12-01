@@ -2,19 +2,113 @@ import { useState } from 'react';
 import { cleanData, sortData, normalizeData, denormalize, createSequences, calculateMetrics } from '../utils/dataPreparation';
 import { buildLSTMModel, trainLSTMModel, predictLSTM, saveLSTMModel, loadLSTMModel, deleteLSTMModel, downloadLSTMModel } from '../models/lstmModel';
 
-export default function ForecastPanel({ data, onForecastUpdate }) {
+interface ForecastPanelProps {
+  data: any[];
+  onForecastUpdate: (forecasts: any[]) => void;
+}
+
+export default function ForecastPanel({ data, onForecastUpdate }: ForecastPanelProps) {
   const [modelType, setModelType] = useState('LSTM');
   const [isTraining, setIsTraining] = useState(false);
-  const [trainingProgress, setTrainingProgress] = useState(null);
-  const [metrics, setMetrics] = useState(null);
-  const [model, setModel] = useState(null);
-  const [metadata, setMetadata] = useState(null);
+  const [trainingProgress, setTrainingProgress] = useState<any>(null);
+  const [metrics, setMetrics] = useState<any>(null);
+  const [model, setModel] = useState<any>(null);
+  const [metadata, setMetadata] = useState<any>(null);
   const [forecastYears, setForecastYears] = useState(5);
-  const [forecasts, setForecasts] = useState(null);
+  const [forecasts, setForecasts] = useState<any>(null);
 
   const LOOKBACK = 2;
-  const FEATURES = ['male', 'female'];
-  const TARGETS = ['male', 'female'];
+
+  // Detect data type: check if data has age, education, place of origin, major countries, civil status, occupation, or sex fields
+  const detectDataType = () => {
+    if (!data || data.length === 0) return { type: 'sex', features: ['male', 'female'], targets: ['male', 'female'] };
+    
+    const firstRow = data[0];
+    // Check for age group fields
+    if (firstRow.age14Below !== undefined || firstRow.age15to19 !== undefined || firstRow.age20to24 !== undefined) {
+      return {
+        type: 'age',
+        features: [
+          'age14Below', 'age15to19', 'age20to24', 'age25to29', 'age30to34',
+          'age35to39', 'age40to44', 'age45to49', 'age50to54', 'age55to59',
+          'age60to64', 'age65to69', 'age70Above'
+        ],
+        targets: [
+          'age14Below', 'age15to19', 'age20to24', 'age25to29', 'age30to34',
+          'age35to39', 'age40to44', 'age45to49', 'age50to54', 'age55to59',
+          'age60to64', 'age65to69', 'age70Above'
+        ]
+      };
+    }
+    // Check for education fields
+    if (firstRow.notOfSchoolingAge !== undefined || firstRow.noFormalEducation !== undefined) {
+      return {
+        type: 'education',
+        features: [
+          'notOfSchoolingAge', 'noFormalEducation', 'elementaryLevel', 'elementaryGraduate',
+          'highSchoolLevel', 'highSchoolGraduate', 'vocationalLevel', 'vocationalGraduate',
+          'collegeLevel', 'collegeGraduate', 'postGraduateLevel', 'postGraduate',
+          'nonFormalEducation'
+        ],
+        targets: [
+          'notOfSchoolingAge', 'noFormalEducation', 'elementaryLevel', 'elementaryGraduate',
+          'highSchoolLevel', 'highSchoolGraduate', 'vocationalLevel', 'vocationalGraduate',
+          'collegeLevel', 'collegeGraduate', 'postGraduateLevel', 'postGraduate',
+          'nonFormalEducation'
+        ]
+      };
+    }
+    // Check for place of origin fields
+    if (firstRow.regionI !== undefined || firstRow.regionII !== undefined || firstRow.regionIII !== undefined) {
+      return {
+        type: 'placeOfOrigin',
+        features: ['regionI', 'regionII', 'regionIII', 'regionIVA', 'regionIVB', 'regionV', 'regionVI', 'regionVII', 'regionVIII', 'regionIX', 'regionX', 'regionXI', 'regionXII', 'regionXIII', 'armm', 'car', 'ncr'],
+        targets: ['regionI', 'regionII', 'regionIII', 'regionIVA', 'regionIVB', 'regionV', 'regionVI', 'regionVII', 'regionVIII', 'regionIX', 'regionX', 'regionXI', 'regionXII', 'regionXIII', 'armm', 'car', 'ncr']
+      };
+    }
+    // Check for major countries fields
+    if (firstRow.Usa !== undefined || firstRow.Canada !== undefined || firstRow.Japan !== undefined) {
+      return {
+        type: 'majorCountries',
+        features: ['Usa', 'Canada', 'Japan', 'Australia', 'Italy', 'NewZealand', 'UnitedKingdom', 'Germany', 'SouthKorea', 'Spain', 'Others'],
+        targets: ['Usa', 'Canada', 'Japan', 'Australia', 'Italy', 'NewZealand', 'UnitedKingdom', 'Germany', 'SouthKorea', 'Spain', 'Others']
+      };
+    }
+    // Check for civil status fields (excluding notReported)
+    if (firstRow.single !== undefined || firstRow.married !== undefined) {
+      return {
+        type: 'civilStatus',
+        features: ['single', 'married', 'widower', 'separated', 'divorced'],
+        targets: ['single', 'married', 'widower', 'separated', 'divorced']
+      };
+    }
+    // Check for occupation fields (excluding noOccupationReported)
+    if (firstRow.professionalTechnical !== undefined || firstRow.managerialExecutive !== undefined) {
+      return {
+        type: 'occupation',
+        features: [
+          'professionalTechnical', 'managerialExecutive', 'clericalWorkers', 'salesWorkers',
+          'serviceWorkers', 'agriculturalWorkers', 'productionTransportLaborers', 'armedForces',
+          'housewives', 'retirees', 'students', 'minors', 'outOfSchoolYouth', 'refugees'
+        ],
+        targets: [
+          'professionalTechnical', 'managerialExecutive', 'clericalWorkers', 'salesWorkers',
+          'serviceWorkers', 'agriculturalWorkers', 'productionTransportLaborers', 'armedForces',
+          'housewives', 'retirees', 'students', 'minors', 'outOfSchoolYouth', 'refugees'
+        ]
+      };
+    }
+    // Default to sex
+    return {
+      type: 'sex',
+      features: ['male', 'female'],
+      targets: ['male', 'female']
+    };
+  };
+
+  const dataConfig = detectDataType();
+  const FEATURES = dataConfig.features;
+  const TARGETS = dataConfig.targets;
 
   const handleTrain = async () => {
     setIsTraining(true);
@@ -38,7 +132,7 @@ export default function ForecastPanel({ data, onForecastUpdate }) {
         : buildLSTMModel(LOOKBACK, FEATURES.length, TARGETS.length); // Fallback to LSTM if MLP not available
 
       // 5. Train model
-      const onEpochEnd = (epoch, logs) => {
+      const onEpochEnd = (epoch: number, logs: any) => {
         setTrainingProgress({
           epoch: epoch + 1,
           loss: logs.loss.toFixed(6),
@@ -54,43 +148,51 @@ export default function ForecastPanel({ data, onForecastUpdate }) {
       const normalizedPredictions = await predictLSTM(newModel, X);
 
       // 7. Denormalize predictions (handle multiple targets)
-      const predictions = normalizedPredictions.map(pred => {
+      const predictions = normalizedPredictions.map((pred: any) => {
         if (Array.isArray(pred)) {
-          return {
-            male: denormalize(pred[0], mins.male, maxs.male),
-            female: denormalize(pred[1], mins.female, maxs.female)
-          };
+          const result: any = {};
+          TARGETS.forEach((target, idx) => {
+            result[target] = denormalize(pred[idx], (mins as any)[target], (maxs as any)[target]);
+          });
+          return result;
         }
-        return { male: 0, female: 0 };
+        const result: any = {};
+        TARGETS.forEach(target => { result[target] = 0; });
+        return result;
       });
 
-      const actualValues = y.map(val => {
+      const actualValues = y.map((val: any) => {
         if (Array.isArray(val)) {
-          return {
-            male: denormalize(val[0], mins.male, maxs.male),
-            female: denormalize(val[1], mins.female, maxs.female)
-          };
+          const result: any = {};
+          TARGETS.forEach((target, idx) => {
+            result[target] = denormalize(val[idx], (mins as any)[target], (maxs as any)[target]);
+          });
+          return result;
         }
-        return { male: 0, female: 0 };
+        const result: any = {};
+        TARGETS.forEach(target => { result[target] = 0; });
+        return result;
       });
 
-      // 8. Calculate metrics for both targets
-      const maleActual = actualValues.map(v => v.male);
-      const malePred = predictions.map(p => p.male);
-      const femaleActual = actualValues.map(v => v.female);
-      const femalePred = predictions.map(p => p.female);
+      // 8. Calculate metrics for each target
+      const targetMetrics: any = {};
+      TARGETS.forEach(target => {
+        const actual = actualValues.map((v: any) => v[target]);
+        const pred = predictions.map((p: any) => p[target]);
+        targetMetrics[target] = calculateMetrics(actual, pred);
+      });
 
-      const maleMetrics = calculateMetrics(maleActual, malePred);
-      const femaleMetrics = calculateMetrics(femaleActual, femalePred);
+      const avgMetrics = {
+        mae: (TARGETS.reduce((sum, t) => sum + parseFloat(targetMetrics[t].mae), 0) / TARGETS.length).toFixed(2),
+        rmse: (TARGETS.reduce((sum, t) => sum + parseFloat(targetMetrics[t].rmse), 0) / TARGETS.length).toFixed(2),
+        mape: (TARGETS.reduce((sum, t) => sum + parseFloat(targetMetrics[t].mape), 0) / TARGETS.length).toFixed(2),
+        r2: (TARGETS.reduce((sum, t) => sum + parseFloat(targetMetrics[t].r2), 0) / TARGETS.length).toFixed(4),
+        accuracy: (TARGETS.reduce((sum, t) => sum + parseFloat(targetMetrics[t].accuracy), 0) / TARGETS.length).toFixed(2)
+      };
 
       const calculatedMetrics = {
-        mae: ((parseFloat(maleMetrics.mae) + parseFloat(femaleMetrics.mae)) / 2).toFixed(2),
-        rmse: ((parseFloat(maleMetrics.rmse) + parseFloat(femaleMetrics.rmse)) / 2).toFixed(2),
-        mape: ((parseFloat(maleMetrics.mape) + parseFloat(femaleMetrics.mape)) / 2).toFixed(2),
-        r2: ((parseFloat(maleMetrics.r2) + parseFloat(femaleMetrics.r2)) / 2).toFixed(4),
-        accuracy: ((parseFloat(maleMetrics.accuracy) + parseFloat(femaleMetrics.accuracy)) / 2).toFixed(2),
-        male: maleMetrics,
-        female: femaleMetrics
+        ...avgMetrics,
+        ...targetMetrics
       };
       setMetrics(calculatedMetrics);
 
@@ -115,7 +217,7 @@ export default function ForecastPanel({ data, onForecastUpdate }) {
       setMetadata(newMetadata);
 
       alert(`${modelType} model trained successfully!\nMAE: ${calculatedMetrics.mae}\nAccuracy: ${calculatedMetrics.accuracy}%`);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Training error:', error);
       alert('Error training model: ' + error.message);
     } finally {
@@ -135,7 +237,7 @@ export default function ForecastPanel({ data, onForecastUpdate }) {
       } else {
         alert('No saved model found. Please train a model first.');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error loading model:', error);
       alert('Error loading model: ' + error.message);
     }
@@ -151,7 +253,7 @@ export default function ForecastPanel({ data, onForecastUpdate }) {
       setMetrics(null);
       setForecasts(null);
       alert('Model deleted successfully!');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting model:', error);
       alert('Error deleting model: ' + error.message);
     }
@@ -166,7 +268,7 @@ export default function ForecastPanel({ data, onForecastUpdate }) {
     try {
       await downloadLSTMModel(model, metadata);
       alert('Model files downloaded!');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error downloading model:', error);
       alert('Error downloading model: ' + error.message);
     }
@@ -179,58 +281,70 @@ export default function ForecastPanel({ data, onForecastUpdate }) {
     }
 
     try {
-      const { mins, maxs, lastData } = metadata;
-      let currentSequence = lastData.map(row => ({
-        year: row.year,
-        male: row.male || 0,
-        female: row.female || 0
-      }));
+      const { mins, maxs, lastData, targets } = metadata;
+      const targetFields = targets || TARGETS;
+      
+      let currentSequence = lastData.map((row: any) => {
+        const result: any = { year: row.year };
+        targetFields.forEach((field: string) => {
+          result[field] = row[field] || 0;
+        });
+        return result;
+      });
 
-      const predictions = [];
+      const predictions: any[] = [];
       let currentYear = metadata.lastYear;
 
       for (let i = 0; i < forecastYears; i++) {
         // Normalize current sequence
-        const normalized = currentSequence.map(row => ({
-          male: (row.male - mins.male) / (maxs.male - mins.male),
-          female: (row.female - mins.female) / (maxs.female - mins.female)
-        }));
+        const normalized = currentSequence.map((row: any) => {
+          const result: any = {};
+          targetFields.forEach((field: string) => {
+            const range = (maxs as any)[field] - (mins as any)[field];
+            result[field] = range === 0 ? 0 : (row[field] - (mins as any)[field]) / range;
+          });
+          return result;
+        });
 
         // Prepare input
-        const input = [normalized.map(row => FEATURES.map(f => row[f]))];
+        const input = [normalized.map((row: any) => FEATURES.map(f => row[f]))];
 
         // Predict
         const normalizedPred = await predictLSTM(model, input);
 
-        // Denormalize (should be [male, female])
-        const pred = Array.isArray(normalizedPred[0]) ? normalizedPred[0] : [normalizedPred[0], normalizedPred[0]];
-        const predictedMale = denormalize(pred[0], mins.male, maxs.male);
-        const predictedFemale = denormalize(pred[1], mins.female, maxs.female);
+        // Denormalize predictions
+        const pred = Array.isArray(normalizedPred[0]) ? normalizedPred[0] : normalizedPred;
+        const forecastResult: any = {
+          year: (currentYear + 1).toString(),
+          isForecast: true
+        };
+        
+        let total = 0;
+        targetFields.forEach((field: string, idx: number) => {
+          const predicted = denormalize(pred[idx], (mins as any)[field], (maxs as any)[field]);
+          forecastResult[field] = Math.round(predicted);
+          total += predicted;
+        });
+        forecastResult.emigrants = Math.round(total); // Total for backward compatibility
 
         currentYear++;
-        predictions.push({
-          year: currentYear.toString(),
-          male: Math.round(predictedMale),
-          female: Math.round(predictedFemale),
-          emigrants: Math.round(predictedMale + predictedFemale), // Total for backward compatibility
-          isForecast: true
-        });
+        predictions.push(forecastResult);
 
         // Update sequence (sliding window)
+        const nextRow: any = { year: currentYear };
+        targetFields.forEach((field: string, idx: number) => {
+          nextRow[field] = denormalize(pred[idx], (mins as any)[field], (maxs as any)[field]);
+        });
         currentSequence = [
           ...currentSequence.slice(1),
-          {
-            year: currentYear,
-            male: predictedMale,
-            female: predictedFemale
-          }
+          nextRow
         ];
       }
 
       setForecasts(predictions);
       onForecastUpdate(predictions);
       alert(`Generated ${forecastYears} year forecast!`);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Forecasting error:', error);
       alert('Error generating forecast: ' + error.message);
     }
@@ -394,25 +508,33 @@ export default function ForecastPanel({ data, onForecastUpdate }) {
         </div>
       )}
 
-      {forecasts && (
+              {forecasts && (
         <div className="bg-pink-50 border-l-4 border-pink-500 p-6 mb-6 rounded-md">
           <h3 className="text-pink-700 mb-4 text-xl">Forecast Results</h3>
           <table className="w-full border-collapse bg-white rounded-md overflow-hidden">
             <thead>
               <tr>
                 <th className="p-3 text-left border-b border-gray-200 bg-pink-500 text-white font-semibold">Year</th>
-                <th className="p-3 text-left border-b border-gray-200 bg-pink-500 text-white font-semibold">Predicted Male</th>
-                <th className="p-3 text-left border-b border-gray-200 bg-pink-500 text-white font-semibold">Predicted Female</th>
+                {TARGETS.map(target => (
+                  <th key={target} className="p-3 text-left border-b border-gray-200 bg-pink-500 text-white font-semibold capitalize">
+                    Predicted {target}
+                  </th>
+                ))}
                 <th className="p-3 text-left border-b border-gray-200 bg-pink-500 text-white font-semibold">Total</th>
               </tr>
             </thead>
             <tbody>
-              {forecasts.map((f, i) => (
+              {forecasts.map((f: any, i: number) => (
                 <tr key={i} className="hover:bg-gray-100 last:border-b-0">
                   <td className="p-3 text-left border-b border-gray-200">{f.year}</td>
-                  <td className="p-3 text-left border-b border-gray-200">{f.male.toLocaleString()}</td>
-                  <td className="p-3 text-left border-b border-gray-200">{f.female.toLocaleString()}</td>
-                  <td className="p-3 text-left border-b border-gray-200 font-semibold">{(f.male + f.female).toLocaleString()}</td>
+                  {TARGETS.map(target => (
+                    <td key={target} className="p-3 text-left border-b border-gray-200">
+                      {f[target]?.toLocaleString() || 0}
+                    </td>
+                  ))}
+                  <td className="p-3 text-left border-b border-gray-200 font-semibold">
+                    {TARGETS.reduce((sum, t) => sum + (f[t] || 0), 0).toLocaleString()}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -424,9 +546,9 @@ export default function ForecastPanel({ data, onForecastUpdate }) {
         <h4 className="text-indigo-800 mb-4 text-lg">Model Configuration</h4>
         <ul className="list-none p-0 m-0">
           <li className="py-2 text-gray-800 border-b border-indigo-200">Lookback window: {LOOKBACK} years</li>
-          <li className="py-2 text-gray-800 border-b border-indigo-200">Input features: Male & Female</li>
-          <li className="py-2 text-gray-800 border-b border-indigo-200">Targets: Male & Female (next year)</li>
-          <li className="py-2 text-gray-800 border-b border-indigo-200">Output units: 2 (male and female)</li>
+          <li className="py-2 text-gray-800 border-b border-indigo-200">Input features: {FEATURES.map(f => f.charAt(0).toUpperCase() + f.slice(1)).join(' & ')}</li>
+          <li className="py-2 text-gray-800 border-b border-indigo-200">Targets: {TARGETS.map(t => t.charAt(0).toUpperCase() + t.slice(1)).join(', ')} (next year)</li>
+          <li className="py-2 text-gray-800 border-b border-indigo-200">Output units: {TARGETS.length} ({TARGETS.join(', ')})</li>
           <li className="py-2 text-gray-800 border-b border-indigo-200">Normalization: Min-Max [0, 1]</li>
           <li className="py-2 text-gray-800 border-b border-indigo-200">Epochs: 100</li>
           <li className="py-2 text-gray-800 border-b-0">Validation split: 20%</li>
