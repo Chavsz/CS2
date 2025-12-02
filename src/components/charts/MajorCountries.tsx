@@ -1,6 +1,15 @@
 import { useEffect, useState } from "react";
-import { getMajorCountries } from '../../services/majorCountries';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, CartesianGrid, ResponsiveContainer } from 'recharts';
+import { getMajorCountries } from "../../services/majorCountries";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend,
+  CartesianGrid,
+  ResponsiveContainer,
+} from "recharts";
 
 type MajorCountries = {
   id: string;
@@ -16,13 +25,13 @@ type MajorCountries = {
   SouthKorea: number;
   Spain: number;
   Others: number;
-}
+};
 
 function MajorCountries() {
   const [majorCountries, setMajorCountries] = useState<MajorCountries[]>([]);
   const [filteredData, setFilteredData] = useState<MajorCountries[]>([]);
-  const [filterType, setFilterType] = useState<'year' | 'total'>('total');
-  const [selectedYear, setSelectedYear] = useState<string>('');
+  const [filterType, setFilterType] = useState<"year" | "total">("total");
+  const [selectedYear, setSelectedYear] = useState<string>("");
 
   // Fetch data
   const fetchData = async () => {
@@ -36,33 +45,52 @@ function MajorCountries() {
   }, []);
 
   // Get unique years for dropdown
-  const uniqueYears = [...new Set(majorCountries.map(item => item.year))].sort((a, b) => b - a);
+  const uniqueYears = [
+    ...new Set(majorCountries.map((item) => item.year)),
+  ].sort((a, b) => b - a);
 
   // Filter data based on selected filter type
   useEffect(() => {
-    if (filterType === 'year' && selectedYear) {
-      const filtered = majorCountries.filter(item => item.year === Number(selectedYear));
+    if (filterType === "year" && selectedYear) {
+      const filtered = majorCountries.filter(
+        (item) => item.year === Number(selectedYear)
+      );
       setFilteredData(filtered);
-    } else if (filterType === 'total') {
+    } else if (filterType === "total") {
       setFilteredData(majorCountries);
     }
   }, [filterType, selectedYear, majorCountries]);
 
   // Compute totals for bar chart based on filtered data
-  const totals = filteredData.reduce((acc, cur) => {
-    acc.Usa += cur.Usa || 0;
-    acc.Canada += cur.Canada || 0;
-    acc.Japan += cur.Japan || 0;
-    acc.Australia += cur.Australia || 0;
-    acc.Italy += cur.Italy || 0;
-    acc.NewZealand += cur.NewZealand || 0;
-    acc.UnitedKingdom += cur.UnitedKingdom || 0;
-    acc.Germany += cur.Germany || 0;
-    acc.SouthKorea += cur.SouthKorea || 0;
-    acc.Spain += cur.Spain || 0;
-    acc.Others += cur.Others || 0;
-    return acc;
-  }, { Usa: 0, Canada: 0, Japan: 0, Australia: 0, Italy: 0, NewZealand: 0, UnitedKingdom: 0, Germany: 0, SouthKorea: 0, Spain: 0, Others: 0 });
+  const totals = filteredData.reduce(
+    (acc, cur) => {
+      acc.Usa += cur.Usa || 0;
+      acc.Canada += cur.Canada || 0;
+      acc.Japan += cur.Japan || 0;
+      acc.Australia += cur.Australia || 0;
+      acc.Italy += cur.Italy || 0;
+      acc.NewZealand += cur.NewZealand || 0;
+      acc.UnitedKingdom += cur.UnitedKingdom || 0;
+      acc.Germany += cur.Germany || 0;
+      acc.SouthKorea += cur.SouthKorea || 0;
+      acc.Spain += cur.Spain || 0;
+      acc.Others += cur.Others || 0;
+      return acc;
+    },
+    {
+      Usa: 0,
+      Canada: 0,
+      Japan: 0,
+      Australia: 0,
+      Italy: 0,
+      NewZealand: 0,
+      UnitedKingdom: 0,
+      Germany: 0,
+      SouthKorea: 0,
+      Spain: 0,
+      Others: 0,
+    }
+  );
 
   const chartData = [
     { category: "Usa", count: totals.Usa },
@@ -84,39 +112,40 @@ function MajorCountries() {
 
       {/* Filter Controls */}
       <div className="flex justify-between items-center mb-5">
-
         <div className="flex items-center gap-5">
           <div className="flex items-center gap-2">
             <div>
-              <button 
-                onClick={() => setFilterType('year')}
+              <button
+                onClick={() => setFilterType("year")}
                 className={`px-4 py-2 border border-gray-300 rounded cursor-pointer ${
-                  filterType === 'year' 
-                    ? 'bg-blue-500 text-white' 
-                    : 'bg-white text-black'
+                  filterType === "year"
+                    ? "bg-blue-500 text-white"
+                    : "bg-white text-black"
                 }`}
               >
                 Year
               </button>
-              {filterType === 'year' && (
-                <select 
-                  value={selectedYear} 
+              {filterType === "year" && (
+                <select
+                  value={selectedYear}
                   onChange={(e) => setSelectedYear(e.target.value)}
                   className="mt-1 px-2 py-1 border border-gray-300 rounded block"
                 >
                   <option value="">Select Year</option>
-                  {uniqueYears.map(year => (
-                    <option key={year} value={year}>{year}</option>
+                  {uniqueYears.map((year) => (
+                    <option key={year} value={year}>
+                      {year}
+                    </option>
                   ))}
                 </select>
               )}
             </div>
-            <button 
-              onClick={() => setFilterType('total')}
+            <button
+              onClick={() => setFilterType("total")}
               className={`px-4 py-2 border border-gray-300 rounded cursor-pointer ${
-                filterType === 'total' 
-                  ? 'bg-blue-500 text-white' 
-                  : 'bg-white text-black'
+                filterType === "total"
+                  ? "bg-blue-500 text-white"
+                  : "bg-white text-black"
               }`}
             >
               Total
@@ -125,15 +154,19 @@ function MajorCountries() {
         </div>
       </div>
 
-      {/* Chart Title */}
-      <h2 className="mb-5 text-lg font-bold">
-        Number of Registered Filipino Emigrants by Major Country of Destination: 1981 - 2020
-      </h2>
-
       {/* Bar Chart */}
       <div className="mb-8 bg-white border border-gray-300 rounded p-5">
+        {/* Chart Title */}
+        <h2 className="mb-2 text-lg text-gray-600 font-semibold">
+          Number of Registered Filipino Emigrants by Major Country of
+          Destination: 1981 - 2020
+        </h2>
+
         <ResponsiveContainer width="100%" height={400}>
-          <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+          <BarChart
+            data={chartData}
+            margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+          >
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="category" />
             <YAxis />
@@ -143,10 +176,6 @@ function MajorCountries() {
           </BarChart>
         </ResponsiveContainer>
       </div>
-
-      
-
-      
     </div>
   );
 }

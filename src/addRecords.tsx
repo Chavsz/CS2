@@ -34,13 +34,9 @@ import {
   deleteAllCivilStatus,
 } from "./services/civilStatus";
 
-// Icon components
-const UploadIcon = () => (
-  <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
-  </svg>
-);
+import { FiUpload } from "react-icons/fi";
 
+// Icon components
 const CalendarIcon = () => (
   <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
@@ -442,8 +438,10 @@ const AddRecords = () => {
     return (
       <div className="bg-white rounded-xl p-8 border border-gray-200 transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
         <h3 className="text-lg font-semibold text-gray-900 mb-5 flex items-center gap-2">
-          {icon}
-          {title}
+          <div className="p-1.5 bg-white rounded-md border text-indigo-600 border-indigo-600 flex items-center justify-center">
+            {icon}
+          </div>
+          <p className="text-gray-600 text-md">{title}</p>
         </h3>
         
         <input
@@ -466,7 +464,7 @@ const AddRecords = () => {
                 : "bg-blue-600 hover:bg-blue-700 active:scale-[0.98]"
             }`}
           >
-            <UploadIcon />
+            <FiUpload />
             {disabled ? "Processing..." : "Choose CSV"}
           </button>
         </label>

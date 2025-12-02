@@ -1,8 +1,37 @@
-import { useState } from 'react';
-import React from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { cleanData, sortData, normalizeData, denormalize, createSequences, calculateMetrics } from '../utils/dataPreparation';
-import { buildLSTMModel, trainLSTMModel, predictLSTM, saveLSTMModel, loadLSTMModel, deleteLSTMModel, downloadLSTMModel } from '../models/lstmModel';
+import { useState, useRef } from "react";
+import React from "react";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
+import {
+  cleanData,
+  sortData,
+  normalizeData,
+  denormalize,
+  createSequences,
+  calculateMetrics,
+} from "../utils/dataPreparation";
+import {
+  buildLSTMModel,
+  trainLSTMModel,
+  predictLSTM,
+  saveLSTMModel,
+  loadLSTMModel,
+  deleteLSTMModel,
+  downloadLSTMModel,
+} from "../models/lstmModel";
+
+//icons
+import { FiDownload } from "react-icons/fi";
+import { FiUpload } from "react-icons/fi";
+import { MdDelete } from "react-icons/md";
 
 interface LSTMForecastProps {
   data: any[];
@@ -17,93 +46,237 @@ export default function LSTMForecast({ data }: LSTMForecastProps) {
   const [forecastYears, setForecastYears] = useState(5);
   const [forecasts, setForecasts] = useState<any[]>([]);
   const [validationResults, setValidationResults] = useState<any[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const LOOKBACK = 2;
 
   // Detect data type: check if data has age, education, place of origin, major countries, civil status, occupation, or sex fields
   const detectDataType = () => {
-    if (data.length === 0) return { type: 'sex', features: ['male', 'female'], targets: ['male', 'female'] };
-    
+    if (data.length === 0)
+      return {
+        type: "sex",
+        features: ["male", "female"],
+        targets: ["male", "female"],
+      };
+
     const firstRow = data[0];
     // Check for age group fields
-    if (firstRow.age14Below !== undefined || firstRow.age15to19 !== undefined || firstRow.age20to24 !== undefined) {
+    if (
+      firstRow.age14Below !== undefined ||
+      firstRow.age15to19 !== undefined ||
+      firstRow.age20to24 !== undefined
+    ) {
       return {
-        type: 'age',
+        type: "age",
         features: [
-          'age14Below', 'age15to19', 'age20to24', 'age25to29', 'age30to34',
-          'age35to39', 'age40to44', 'age45to49', 'age50to54', 'age55to59',
-          'age60to64', 'age65to69', 'age70Above'
+          "age14Below",
+          "age15to19",
+          "age20to24",
+          "age25to29",
+          "age30to34",
+          "age35to39",
+          "age40to44",
+          "age45to49",
+          "age50to54",
+          "age55to59",
+          "age60to64",
+          "age65to69",
+          "age70Above",
         ],
         targets: [
-          'age14Below', 'age15to19', 'age20to24', 'age25to29', 'age30to34',
-          'age35to39', 'age40to44', 'age45to49', 'age50to54', 'age55to59',
-          'age60to64', 'age65to69', 'age70Above'
-        ]
+          "age14Below",
+          "age15to19",
+          "age20to24",
+          "age25to29",
+          "age30to34",
+          "age35to39",
+          "age40to44",
+          "age45to49",
+          "age50to54",
+          "age55to59",
+          "age60to64",
+          "age65to69",
+          "age70Above",
+        ],
       };
     }
     // Check for education fields
-    if (firstRow.notOfSchoolingAge !== undefined || firstRow.noFormalEducation !== undefined) {
+    if (
+      firstRow.notOfSchoolingAge !== undefined ||
+      firstRow.noFormalEducation !== undefined
+    ) {
       return {
-        type: 'education',
+        type: "education",
         features: [
-          'notOfSchoolingAge', 'noFormalEducation', 'elementaryLevel', 'elementaryGraduate',
-          'highSchoolLevel', 'highSchoolGraduate', 'vocationalLevel', 'vocationalGraduate',
-          'collegeLevel', 'collegeGraduate', 'postGraduateLevel', 'postGraduate',
-          'nonFormalEducation'
+          "notOfSchoolingAge",
+          "noFormalEducation",
+          "elementaryLevel",
+          "elementaryGraduate",
+          "highSchoolLevel",
+          "highSchoolGraduate",
+          "vocationalLevel",
+          "vocationalGraduate",
+          "collegeLevel",
+          "collegeGraduate",
+          "postGraduateLevel",
+          "postGraduate",
+          "nonFormalEducation",
         ],
         targets: [
-          'notOfSchoolingAge', 'noFormalEducation', 'elementaryLevel', 'elementaryGraduate',
-          'highSchoolLevel', 'highSchoolGraduate', 'vocationalLevel', 'vocationalGraduate',
-          'collegeLevel', 'collegeGraduate', 'postGraduateLevel', 'postGraduate',
-          'nonFormalEducation'
-        ]
+          "notOfSchoolingAge",
+          "noFormalEducation",
+          "elementaryLevel",
+          "elementaryGraduate",
+          "highSchoolLevel",
+          "highSchoolGraduate",
+          "vocationalLevel",
+          "vocationalGraduate",
+          "collegeLevel",
+          "collegeGraduate",
+          "postGraduateLevel",
+          "postGraduate",
+          "nonFormalEducation",
+        ],
       };
     }
     // Check for place of origin fields
-    if (firstRow.regionI !== undefined || firstRow.regionII !== undefined || firstRow.regionIII !== undefined) {
+    if (
+      firstRow.regionI !== undefined ||
+      firstRow.regionII !== undefined ||
+      firstRow.regionIII !== undefined
+    ) {
       return {
-        type: 'placeOfOrigin',
-        features: ['regionI', 'regionII', 'regionIII', 'regionIVA', 'regionIVB', 'regionV', 'regionVI', 'regionVII', 'regionVIII', 'regionIX', 'regionX', 'regionXI', 'regionXII', 'regionXIII', 'armm', 'car', 'ncr'],
-        targets: ['regionI', 'regionII', 'regionIII', 'regionIVA', 'regionIVB', 'regionV', 'regionVI', 'regionVII', 'regionVIII', 'regionIX', 'regionX', 'regionXI', 'regionXII', 'regionXIII', 'armm', 'car', 'ncr']
+        type: "placeOfOrigin",
+        features: [
+          "regionI",
+          "regionII",
+          "regionIII",
+          "regionIVA",
+          "regionIVB",
+          "regionV",
+          "regionVI",
+          "regionVII",
+          "regionVIII",
+          "regionIX",
+          "regionX",
+          "regionXI",
+          "regionXII",
+          "regionXIII",
+          "armm",
+          "car",
+          "ncr",
+        ],
+        targets: [
+          "regionI",
+          "regionII",
+          "regionIII",
+          "regionIVA",
+          "regionIVB",
+          "regionV",
+          "regionVI",
+          "regionVII",
+          "regionVIII",
+          "regionIX",
+          "regionX",
+          "regionXI",
+          "regionXII",
+          "regionXIII",
+          "armm",
+          "car",
+          "ncr",
+        ],
       };
     }
     // Check for major countries fields
-    if (firstRow.Usa !== undefined || firstRow.Canada !== undefined || firstRow.Japan !== undefined) {
+    if (
+      firstRow.Usa !== undefined ||
+      firstRow.Canada !== undefined ||
+      firstRow.Japan !== undefined
+    ) {
       return {
-        type: 'majorCountries',
-        features: ['Usa', 'Canada', 'Japan', 'Australia', 'Italy', 'NewZealand', 'UnitedKingdom', 'Germany', 'SouthKorea', 'Spain', 'Others'],
-        targets: ['Usa', 'Canada', 'Japan', 'Australia', 'Italy', 'NewZealand', 'UnitedKingdom', 'Germany', 'SouthKorea', 'Spain', 'Others']
+        type: "majorCountries",
+        features: [
+          "Usa",
+          "Canada",
+          "Japan",
+          "Australia",
+          "Italy",
+          "NewZealand",
+          "UnitedKingdom",
+          "Germany",
+          "SouthKorea",
+          "Spain",
+          "Others",
+        ],
+        targets: [
+          "Usa",
+          "Canada",
+          "Japan",
+          "Australia",
+          "Italy",
+          "NewZealand",
+          "UnitedKingdom",
+          "Germany",
+          "SouthKorea",
+          "Spain",
+          "Others",
+        ],
       };
     }
     // Check for civil status fields (excluding notReported)
     if (firstRow.single !== undefined || firstRow.married !== undefined) {
       return {
-        type: 'civilStatus',
-        features: ['single', 'married', 'widower', 'separated', 'divorced'],
-        targets: ['single', 'married', 'widower', 'separated', 'divorced']
+        type: "civilStatus",
+        features: ["single", "married", "widower", "separated", "divorced"],
+        targets: ["single", "married", "widower", "separated", "divorced"],
       };
     }
     // Check for occupation fields (excluding noOccupationReported)
-    if (firstRow.professionalTechnical !== undefined || firstRow.managerialExecutive !== undefined) {
+    if (
+      firstRow.professionalTechnical !== undefined ||
+      firstRow.managerialExecutive !== undefined
+    ) {
       return {
-        type: 'occupation',
+        type: "occupation",
         features: [
-          'professionalTechnical', 'managerialExecutive', 'clericalWorkers', 'salesWorkers',
-          'serviceWorkers', 'agriculturalWorkers', 'productionTransportLaborers', 'armedForces',
-          'housewives', 'retirees', 'students', 'minors', 'outOfSchoolYouth', 'refugees'
+          "professionalTechnical",
+          "managerialExecutive",
+          "clericalWorkers",
+          "salesWorkers",
+          "serviceWorkers",
+          "agriculturalWorkers",
+          "productionTransportLaborers",
+          "armedForces",
+          "housewives",
+          "retirees",
+          "students",
+          "minors",
+          "outOfSchoolYouth",
+          "refugees",
         ],
         targets: [
-          'professionalTechnical', 'managerialExecutive', 'clericalWorkers', 'salesWorkers',
-          'serviceWorkers', 'agriculturalWorkers', 'productionTransportLaborers', 'armedForces',
-          'housewives', 'retirees', 'students', 'minors', 'outOfSchoolYouth', 'refugees'
-        ]
+          "professionalTechnical",
+          "managerialExecutive",
+          "clericalWorkers",
+          "salesWorkers",
+          "serviceWorkers",
+          "agriculturalWorkers",
+          "productionTransportLaborers",
+          "armedForces",
+          "housewives",
+          "retirees",
+          "students",
+          "minors",
+          "outOfSchoolYouth",
+          "refugees",
+        ],
       };
     }
     // Default to sex
     return {
-      type: 'sex',
-      features: ['male', 'female'],
-      targets: ['male', 'female']
+      type: "sex",
+      features: ["male", "female"],
+      targets: ["male", "female"],
     };
   };
 
@@ -124,7 +297,11 @@ export default function LSTMForecast({ data }: LSTMForecastProps) {
       const { X, y } = createSequences(normalized, LOOKBACK, FEATURES, TARGETS);
 
       // Build model with 2 output units (male and female)
-      const newModel = buildLSTMModel(LOOKBACK, FEATURES.length, TARGETS.length);
+      const newModel = buildLSTMModel(
+        LOOKBACK,
+        FEATURES.length,
+        TARGETS.length
+      );
 
       const onEpochEnd = (epoch: number, logs: any) => {
         setTrainingProgress({
@@ -132,7 +309,7 @@ export default function LSTMForecast({ data }: LSTMForecastProps) {
           loss: logs.loss.toFixed(6),
           mae: logs.mae.toFixed(6),
           val_loss: logs.val_loss?.toFixed(6),
-          val_mae: logs.val_mae?.toFixed(6)
+          val_mae: logs.val_mae?.toFixed(6),
         });
       };
 
@@ -145,13 +322,19 @@ export default function LSTMForecast({ data }: LSTMForecastProps) {
         if (Array.isArray(pred)) {
           const result: any = {};
           TARGETS.forEach((target, idx) => {
-            result[target] = denormalize(pred[idx], (mins as any)[target], (maxs as any)[target]);
+            result[target] = denormalize(
+              pred[idx],
+              (mins as any)[target],
+              (maxs as any)[target]
+            );
           });
           return result;
         }
         // Fallback for single target (shouldn't happen)
         const result: any = {};
-        TARGETS.forEach(target => { result[target] = 0; });
+        TARGETS.forEach((target) => {
+          result[target] = 0;
+        });
         return result;
       });
 
@@ -159,32 +342,47 @@ export default function LSTMForecast({ data }: LSTMForecastProps) {
         if (Array.isArray(val)) {
           const result: any = {};
           TARGETS.forEach((target, idx) => {
-            result[target] = denormalize(val[idx], (mins as any)[target], (maxs as any)[target]);
+            result[target] = denormalize(
+              val[idx],
+              (mins as any)[target],
+              (maxs as any)[target]
+            );
           });
           return result;
         }
         const result: any = {};
-        TARGETS.forEach(target => { result[target] = 0; });
+        TARGETS.forEach((target) => {
+          result[target] = 0;
+        });
         return result;
       });
 
       // Create validation results table data (20% validation split for testing)
       const trainSize = Math.floor(actualValues.length * 0.8);
-      const resultsData = actualValues.slice(trainSize).map((actual: any, index: number) => {
-        const pred = predictions[trainSize + index];
-        const result: any = { year: cleanedData[trainSize + index + LOOKBACK].year };
-        TARGETS.forEach(target => {
-          result[`actual${target.charAt(0).toUpperCase() + target.slice(1)}`] = Math.round(actual[target]);
-          result[`predicted${target.charAt(0).toUpperCase() + target.slice(1)}`] = Math.round(pred[target]);
-          result[`error${target.charAt(0).toUpperCase() + target.slice(1)}`] = Math.round(pred[target] - actual[target]);
+      const resultsData = actualValues
+        .slice(trainSize)
+        .map((actual: any, index: number) => {
+          const pred = predictions[trainSize + index];
+          const result: any = {
+            year: cleanedData[trainSize + index + LOOKBACK].year,
+          };
+          TARGETS.forEach((target) => {
+            result[
+              `actual${target.charAt(0).toUpperCase() + target.slice(1)}`
+            ] = Math.round(actual[target]);
+            result[
+              `predicted${target.charAt(0).toUpperCase() + target.slice(1)}`
+            ] = Math.round(pred[target]);
+            result[`error${target.charAt(0).toUpperCase() + target.slice(1)}`] =
+              Math.round(pred[target] - actual[target]);
+          });
+          return result;
         });
-        return result;
-      });
       setValidationResults(resultsData);
 
       // Calculate metrics for each target
       const targetMetrics: any = {};
-      TARGETS.forEach(target => {
+      TARGETS.forEach((target) => {
         const actual = actualValues.map((v: any) => v[target]);
         const pred = predictions.map((p: any) => p[target]);
         targetMetrics[target] = calculateMetrics(actual, pred);
@@ -192,21 +390,44 @@ export default function LSTMForecast({ data }: LSTMForecastProps) {
 
       // Average metrics for overall performance
       const avgMetrics = {
-        mae: (TARGETS.reduce((sum, t) => sum + parseFloat(targetMetrics[t].mae), 0) / TARGETS.length).toFixed(2),
-        rmse: (TARGETS.reduce((sum, t) => sum + parseFloat(targetMetrics[t].rmse), 0) / TARGETS.length).toFixed(2),
-        mape: (TARGETS.reduce((sum, t) => sum + parseFloat(targetMetrics[t].mape), 0) / TARGETS.length).toFixed(2),
-        r2: (TARGETS.reduce((sum, t) => sum + parseFloat(targetMetrics[t].r2), 0) / TARGETS.length).toFixed(4),
-        accuracy: (TARGETS.reduce((sum, t) => sum + parseFloat(targetMetrics[t].accuracy), 0) / TARGETS.length).toFixed(2)
+        mae: (
+          TARGETS.reduce(
+            (sum, t) => sum + parseFloat(targetMetrics[t].mae),
+            0
+          ) / TARGETS.length
+        ).toFixed(2),
+        rmse: (
+          TARGETS.reduce(
+            (sum, t) => sum + parseFloat(targetMetrics[t].rmse),
+            0
+          ) / TARGETS.length
+        ).toFixed(2),
+        mape: (
+          TARGETS.reduce(
+            (sum, t) => sum + parseFloat(targetMetrics[t].mape),
+            0
+          ) / TARGETS.length
+        ).toFixed(2),
+        r2: (
+          TARGETS.reduce((sum, t) => sum + parseFloat(targetMetrics[t].r2), 0) /
+          TARGETS.length
+        ).toFixed(4),
+        accuracy: (
+          TARGETS.reduce(
+            (sum, t) => sum + parseFloat(targetMetrics[t].accuracy),
+            0
+          ) / TARGETS.length
+        ).toFixed(2),
       };
 
       const calculatedMetrics = {
         ...avgMetrics,
-        ...targetMetrics
+        ...targetMetrics,
       };
       setMetrics(calculatedMetrics);
 
       const newMetadata = {
-        modelType: 'LSTM',
+        modelType: "LSTM",
         lookback: LOOKBACK,
         features: FEATURES,
         targets: TARGETS,
@@ -215,7 +436,7 @@ export default function LSTMForecast({ data }: LSTMForecastProps) {
         lastYear: cleanedData[cleanedData.length - 1].year,
         lastData: cleanedData.slice(-LOOKBACK),
         metrics: calculatedMetrics,
-        trainedAt: new Date().toISOString()
+        trainedAt: new Date().toISOString(),
       };
 
       await saveLSTMModel(newModel, newMetadata);
@@ -223,10 +444,12 @@ export default function LSTMForecast({ data }: LSTMForecastProps) {
       setModel(newModel);
       setMetadata(newMetadata);
 
-      alert(`LSTM model trained successfully!\nOverall MAE: ${calculatedMetrics.mae}\nOverall Accuracy: ${calculatedMetrics.accuracy}%`);
+      // alert(
+      //   `LSTM model trained successfully!\nOverall MAE: ${calculatedMetrics.mae}\nOverall Accuracy: ${calculatedMetrics.accuracy}%`
+      // );
     } catch (error: any) {
-      console.error('Training error:', error);
-      alert('Error training model: ' + error.message);
+      console.error("Training error:", error);
+      alert("Error training model: " + error.message);
     } finally {
       setIsTraining(false);
     }
@@ -239,18 +462,96 @@ export default function LSTMForecast({ data }: LSTMForecastProps) {
         setModel(result.model);
         setMetadata(result.metadata);
         setMetrics(result.metadata.metrics);
-        alert('LSTM model loaded successfully!');
+        alert("LSTM model loaded successfully!");
       } else {
-        alert('No saved model found. Please train a model first.');
+        alert("No saved model found. Please train a model first.");
       }
     } catch (error: any) {
-      console.error('Error loading model:', error);
-      alert('Error loading model: ' + error.message);
+      console.error("Error loading model:", error);
+      alert("Error loading model: " + error.message);
+    }
+  };
+
+  const handleUploadModel = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+
+    try {
+      // Find model.json and metadata.json files
+      let modelJsonFile: File | null = null;
+      let metadataFile: File | null = null;
+      const modelFiles: File[] = [];
+
+      // Separate model files from metadata file
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        if (file.name === 'lstm-metadata.json' || file.name === 'metadata.json') {
+          metadataFile = file;
+        } else {
+          // All other files are part of the model (model.json and weight files)
+          modelFiles.push(file);
+          if (file.name === 'model.json' || (file.name.endsWith('.json') && !file.name.includes('metadata'))) {
+            modelJsonFile = file;
+          }
+        }
+      }
+
+      if (modelFiles.length === 0) {
+        alert("Please select model files (model.json and weight files).");
+        return;
+      }
+
+      if (!modelJsonFile) {
+        alert("Please select a model.json file.");
+        return;
+      }
+
+      // Load the model using TensorFlow.js
+      // browserFiles expects: first file is model.json, rest are weight files
+      const sortedFiles = [modelJsonFile, ...modelFiles.filter(f => f !== modelJsonFile)];
+      const tf = await import('@tensorflow/tfjs');
+      const uploadedModel = await tf.loadLayersModel(tf.io.browserFiles(sortedFiles));
+
+      // Load metadata if provided
+      let uploadedMetadata: any = null;
+      if (metadataFile) {
+        const metadataText = await metadataFile.text();
+        uploadedMetadata = JSON.parse(metadataText);
+      } else {
+        alert("Warning: No metadata file found. Model loaded but some features may not work without metadata.");
+      }
+
+      // Set the model and metadata
+      setModel(uploadedModel);
+      if (uploadedMetadata) {
+        setMetadata(uploadedMetadata);
+        setMetrics(uploadedMetadata.metrics || null);
+      }
+
+      // Save to IndexedDB for future use
+      if (uploadedMetadata) {
+        await saveLSTMModel(uploadedModel, uploadedMetadata);
+      }
+
+      alert("LSTM model uploaded successfully!");
+      
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    } catch (error: any) {
+      console.error("Error uploading model:", error);
+      alert("Error uploading model: " + error.message + "\n\nPlease make sure you select:\n1. model.json file\n2. All weight files (.bin)\n3. lstm-metadata.json (optional but recommended)\n\nNote: Select all files at once using Ctrl+Click or Cmd+Click.");
     }
   };
 
   const handleDeleteModel = async () => {
-    if (!confirm('Are you sure you want to delete the saved LSTM model?')) return;
+    if (!confirm("Are you sure you want to delete the saved LSTM model?"))
+      return;
 
     try {
       await deleteLSTMModel();
@@ -258,38 +559,38 @@ export default function LSTMForecast({ data }: LSTMForecastProps) {
       setMetadata(null);
       setMetrics(null);
       setForecasts([]);
-      alert('LSTM model deleted successfully!');
+      alert("LSTM model deleted successfully!");
     } catch (error: any) {
-      console.error('Error deleting model:', error);
-      alert('Error deleting model: ' + error.message);
+      console.error("Error deleting model:", error);
+      alert("Error deleting model: " + error.message);
     }
   };
 
   const handleDownloadModel = async () => {
     if (!model || !metadata) {
-      alert('No model to download. Please train a model first.');
+      alert("No model to download. Please train a model first.");
       return;
     }
 
     try {
       await downloadLSTMModel(model, metadata);
-      alert('LSTM model files downloaded!');
+      alert("LSTM model files downloaded!");
     } catch (error: any) {
-      console.error('Error downloading model:', error);
-      alert('Error downloading model: ' + error.message);
+      console.error("Error downloading model:", error);
+      alert("Error downloading model: " + error.message);
     }
   };
 
   const handleForecast = async () => {
     if (!model || !metadata) {
-      alert('Please train or load a model first.');
+      alert("Please train or load a model first.");
       return;
     }
 
     try {
       const { mins, maxs, lastData, targets } = metadata;
       const targetFields = targets || TARGETS;
-      
+
       let currentSequence = lastData.map((row: any) => {
         const result: any = { year: row.year };
         targetFields.forEach((field: string) => {
@@ -307,22 +608,27 @@ export default function LSTMForecast({ data }: LSTMForecastProps) {
           const result: any = {};
           targetFields.forEach((field: string) => {
             const range = maxs[field] - mins[field];
-            result[field] = range === 0 ? 0 : (row[field] - mins[field]) / range;
+            result[field] =
+              range === 0 ? 0 : (row[field] - mins[field]) / range;
           });
           return result;
         });
 
         // Prepare input
-        const input = [normalized.map((row: any) => FEATURES.map(f => row[f]))];
+        const input = [
+          normalized.map((row: any) => FEATURES.map((f) => row[f])),
+        ];
         const normalizedPred = await predictLSTM(model, input);
-        
+
         // Denormalize predictions
-        const pred = Array.isArray(normalizedPred[0]) ? normalizedPred[0] : normalizedPred;
+        const pred = Array.isArray(normalizedPred[0])
+          ? normalizedPred[0]
+          : normalizedPred;
         const forecastResult: any = {
           year: (currentYear + 1).toString(),
-          isForecast: true
+          isForecast: true,
         };
-        
+
         let total = 0;
         targetFields.forEach((field: string, idx: number) => {
           const predicted = denormalize(pred[idx], mins[field], maxs[field]);
@@ -339,73 +645,104 @@ export default function LSTMForecast({ data }: LSTMForecastProps) {
         targetFields.forEach((field: string, idx: number) => {
           nextRow[field] = denormalize(pred[idx], mins[field], maxs[field]);
         });
-        currentSequence = [
-          ...currentSequence.slice(1),
-          nextRow
-        ];
+        currentSequence = [...currentSequence.slice(1), nextRow];
       }
 
       setForecasts(predictions);
-      alert(`Generated ${forecastYears} year LSTM forecast for ${targetFields.length} target(s)!`);
+      alert(
+        `Generated ${forecastYears} year LSTM forecast for ${targetFields.length} target(s)!`
+      );
     } catch (error: any) {
-      console.error('Forecasting error:', error);
-      alert('Error generating forecast: ' + error.message);
+      console.error("Forecasting error:", error);
+      alert("Error generating forecast: " + error.message);
     }
   };
 
   const chartData = [...data, ...forecasts];
 
   return (
-    <div className="bg-white rounded-xl p-8 shadow-md mt-8 border border-gray-300">
-      <h2 className="text-gray-800 mb-6 text-2xl">LSTM Forecasting (Long Short-Term Memory)</h2>
+    <div>
+      <div className="flex justify-between mb-4 bg-white border border-gray-300 rounded-md p-4">
+        <div className="flex items-center gap-4">
+          <button
+            onClick={handleTrain}
+            disabled={isTraining}
+            className="px-4 py-3 bg-indigo-600 text-white border-none rounded-md text-base font-medium cursor-pointer transition-colors duration-300 hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
+          >
+            {isTraining ? "Training..." : "Train LSTM Model"}
+          </button>
+        </div>
 
-      <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-        <button 
-          onClick={handleTrain} 
-          disabled={isTraining}
-          className="px-6 py-3 bg-indigo-600 text-white border-none rounded-md text-base font-medium cursor-pointer transition-colors duration-300 hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed md:w-full"
-        >
-          {isTraining ? 'Training...' : 'Train LSTM Model'}
-        </button>
-        <button 
-          onClick={handleLoadModel} 
-          disabled={isTraining}
-          className="px-6 py-3 bg-indigo-600 text-white border-none rounded-md text-base font-medium cursor-pointer transition-colors duration-300 hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed md:w-full"
-        >
-          Load Model
-        </button>
-        <button 
-          onClick={handleDeleteModel} 
-          disabled={isTraining || !model}
-          className="px-6 py-3 bg-indigo-600 text-white border-none rounded-md text-base font-medium cursor-pointer transition-colors duration-300 hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed md:w-full"
-        >
-          Delete Model
-        </button>
-        <button 
-          onClick={handleDownloadModel} 
-          disabled={isTraining || !model}
-          className="px-6 py-3 bg-indigo-600 text-white border-none rounded-md text-base font-medium cursor-pointer transition-colors duration-300 hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed md:w-full"
-        >
-          Download Model
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleLoadModel}
+            disabled={isTraining}
+            className="flex gap-2 items-center px-4 py-2 bg-white text-gray-600 border border-gray-300 rounded-md text-base font-medium cursor-pointer transition-colors duration-300  disabled:bg-gray-300 disabled:cursor-not-allowed"
+          >
+            <FiUpload  />
+            Load Model
+          </button>
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            multiple
+            accept=".json,.bin"
+            style={{ display: 'none' }}
+          />
+          <button
+            onClick={handleUploadModel}
+            disabled={isTraining}
+            className="flex gap-2 items-center px-4 py-2 bg-white text-gray-600 border border-gray-300 rounded-md text-base font-medium cursor-pointer transition-colors duration-300  disabled:bg-gray-300 disabled:cursor-not-allowed"
+          >
+            <FiUpload  />
+            Upload Model
+          </button>
+          <button
+            onClick={handleDownloadModel}
+            disabled={isTraining || !model}
+            className="flex gap-2 items-center px-4 py-2 bg-white text-gray-600 border border-gray-300 rounded-md text-base font-medium cursor-pointer transition-colors duration-300  disabled:bg-gray-300 disabled:cursor-not-allowed"
+          >
+            <FiDownload  />
+            Download Model
+          </button>
+          <button
+            onClick={handleDeleteModel}
+            disabled={isTraining || !model}
+            className="flex gap-2 items-center px-4 py-2 bg-white text-gray-600 border border-gray-300 rounded-md text-base font-medium cursor-pointer transition-colors duration-300  disabled:bg-gray-300 disabled:cursor-not-allowed"
+          >
+            <MdDelete />
+            Delete Model
+          </button>
+        </div>
       </div>
 
-      {isTraining && trainingProgress && (
+      {/* {isTraining && trainingProgress && (
         <div className="bg-blue-50 border-l-4 border-blue-500 p-6 mb-6 rounded-md">
           <h3 className="text-blue-700 mb-4 text-xl">Training Progress</h3>
-          <p className="my-2 text-gray-800 font-mono">Epoch: {trainingProgress.epoch} / 100</p>
-          <p className="my-2 text-gray-800 font-mono">Loss: {trainingProgress.loss}</p>
-          <p className="my-2 text-gray-800 font-mono">MAE: {trainingProgress.mae}</p>
+          <p className="my-2 text-gray-800 font-mono">
+            Epoch: {trainingProgress.epoch} / 100
+          </p>
+          <p className="my-2 text-gray-800 font-mono">
+            Loss: {trainingProgress.loss}
+          </p>
+          <p className="my-2 text-gray-800 font-mono">
+            MAE: {trainingProgress.mae}
+          </p>
           {trainingProgress.val_loss && (
             <>
-              <p className="my-2 text-gray-800 font-mono">Val Loss: {trainingProgress.val_loss}</p>
-              <p className="my-2 text-gray-800 font-mono">Val MAE: {trainingProgress.val_mae}</p>
+              <p className="my-2 text-gray-800 font-mono">
+                Val Loss: {trainingProgress.val_loss}
+              </p>
+              <p className="my-2 text-gray-800 font-mono">
+                Val MAE: {trainingProgress.val_mae}
+              </p>
             </>
           )}
         </div>
-      )}
+      )} */}
 
-      {metrics && !isTraining && (
+      {/* {metrics && !isTraining && (
         <>
           <div className="bg-green-50 border-l-4 border-green-500 p-6 mb-6 rounded-md">
             <h3 className="text-green-700 mb-4 text-xl">LSTM Model Performance Metrics (Overall Average)</h3>
@@ -510,11 +847,11 @@ export default function LSTMForecast({ data }: LSTMForecastProps) {
             </div>
           )}
         </>
-      )}
+      )} */}
 
       {model && !isTraining && (
-        <div className="bg-orange-50 border-l-4 border-orange-500 p-6 mb-6 rounded-md">
-          <h3 className="text-orange-800 mb-4 text-xl">Generate LSTM Forecast</h3>
+        <div className="border border-gray-300 p-4 rounded-md bg-white">
+          <h3 className="text-gray-600 text-xl mb-3 font-semibold">Generate LSTM Forecast</h3>
           <div className="flex items-center gap-4 flex-wrap">
             <label className="flex items-center gap-2 text-gray-800">
               Years to forecast:
@@ -524,12 +861,12 @@ export default function LSTMForecast({ data }: LSTMForecastProps) {
                 max="10"
                 value={forecastYears}
                 onChange={(e) => setForecastYears(parseInt(e.target.value))}
-                className="p-2 border border-gray-300 rounded w-20 text-base"
+                className="p-1 border border-gray-300 rounded w-11 text-base"
               />
             </label>
-            <button 
+            <button
               onClick={handleForecast}
-              className="px-6 py-3 bg-[#ff6b6b] text-white border-none rounded-md text-base font-medium cursor-pointer transition-colors duration-300 hover:bg-[#ee5253]"
+              className="px-4 py-2 bg-indigo-600 text-white border-none rounded-md text-base font-medium cursor-pointer transition-colors duration-300 hover:bg-indigo-600"
             >
               Generate Forecast
             </button>
@@ -539,8 +876,10 @@ export default function LSTMForecast({ data }: LSTMForecastProps) {
 
       {forecasts.length > 0 && (
         <>
-          <div className="mb-6">
-            <h3 className="text-gray-800 mb-4 text-xl">LSTM: Historical + Forecast</h3>
+          <div className="p-4 my-4 bg-white border border-gray-300 rounded-md">
+            <h3 className="text-gray-800 mb-4 text-xl">
+              LSTM: Historical + Forecast
+            </h3>
             <ResponsiveContainer width="100%" height={400}>
               <LineChart
                 data={chartData}
@@ -549,34 +888,94 @@ export default function LSTMForecast({ data }: LSTMForecastProps) {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="year" />
                 <YAxis
-                  label={{ value: 'Emigrants', angle: -90, position: 'insideLeft' }}
+                  label={{
+                    value: "Emigrants",
+                    angle: -90,
+                    position: "insideLeft",
+                  }}
                 />
-                <Tooltip />
+                <Tooltip
+                  content={({ active, payload }) => {
+                    if (!active || !payload || !payload.length) return null;
+                    
+                    // Find forecast data point (check if any payload has isForecast)
+                    const forecastEntry = payload.find(
+                      (entry: any) => entry.payload?.isForecast
+                    );
+                    
+                    // Only show tooltip if hovering over forecast data
+                    if (!forecastEntry) return null;
+                    
+                    const data = forecastEntry.payload;
+                    
+                    return (
+                      <div className="bg-white border border-gray-300 rounded-md shadow-lg p-3">
+                        <p className="font-semibold text-gray-800 mb-2">
+                          {data.year} (Forecast)
+                        </p>
+                        {TARGETS.map((target, idx) => {
+                          const color = [
+                            "#3b82f6",
+                            "#ec4899",
+                            "#10b981",
+                            "#f59e0b",
+                            "#8b5cf6",
+                          ][idx % 5];
+                          return (
+                            <p
+                              key={target}
+                              style={{ color }}
+                              className="text-sm mb-1"
+                            >
+                              {`${target.charAt(0).toUpperCase() + target.slice(1)}: ${data[target]?.toLocaleString() || 0}`}
+                            </p>
+                          );
+                        })}
+                      </div>
+                    );
+                  }}
+                />
                 <Legend />
                 {TARGETS.map((target, idx) => {
-                  const colors = ['#3b82f6', '#ec4899', '#10b981', '#f59e0b', '#8b5cf6'];
+                  const colors = [
+                    "#3b82f6",
+                    "#ec4899",
+                    "#10b981",
+                    "#f59e0b",
+                    "#8b5cf6",
+                  ];
                   const color = colors[idx % colors.length];
                   return (
                     <React.Fragment key={target}>
                       <Line
                         type="monotone"
-                        dataKey={target}
+                        dataKey={(entry) =>
+                          !entry.isForecast ? entry[target] : null
+                        }
                         stroke={color}
-                        strokeWidth={2}
-                        name={`${target.charAt(0).toUpperCase() + target.slice(1)} (Historical)`}
+                        strokeWidth={1}
+                        name={`${
+                          target.charAt(0).toUpperCase() + target.slice(1)
+                        } (Historical)`}
                         dot={{ r: 3 }}
                         activeDot={{ r: 5 }}
+                        connectNulls={false}
                       />
                       <Line
                         type="monotone"
-                        dataKey={(entry) => entry.isForecast ? entry[target] : null}
+                        dataKey={(entry) =>
+                          entry.isForecast ? entry[target] : null
+                        }
                         stroke={color}
-                        strokeWidth={2}
+                        strokeWidth={1}
                         strokeDasharray="5 5"
-                        name={`${target.charAt(0).toUpperCase() + target.slice(1)} (Forecast)`}
+                        name={`${
+                          target.charAt(0).toUpperCase() + target.slice(1)
+                        } (Forecast)`}
                         dot={(props: any) => {
                           const { cx, cy, payload } = props;
-                          if (!payload.isForecast || !payload[target]) return <></>;
+                          if (!payload.isForecast || !payload[target])
+                            return <></>;
                           return <circle cx={cx} cy={cy} r={4} fill={color} />;
                         }}
                         connectNulls={false}
@@ -588,32 +987,40 @@ export default function LSTMForecast({ data }: LSTMForecastProps) {
             </ResponsiveContainer>
           </div>
 
-          <div className="bg-pink-50 border-l-4 border-pink-500 p-6 mb-6 rounded-md">
-            <h3 className="text-pink-700 mb-4 text-xl">LSTM Forecast Results</h3>
-            <table className="w-full border-collapse bg-white rounded-md overflow-hidden">
+          <div className="border border-gray-300 p-4 rounded-md bg-white">
+            <h3 className="text-gray-600 mb-4 text-xl font-semibold">
+              LSTM Forecast Results
+            </h3>
+            <table className="w-full border-collapse rounded-md overflow-hidden">
               <thead>
                 <tr>
-                  <th className="p-3 text-left border-b border-gray-200 bg-pink-500 text-white font-semibold">Year</th>
-                  {TARGETS.map(target => (
-                    <th key={target} className="p-3 text-left border-b border-gray-200 bg-pink-500 text-white font-semibold capitalize">
-                      Predicted {target}
+                  <th className="p-3 text-left border-b border-gray-200 text-gray-800 font-semibold">
+                    Year
+                  </th>
+                  {TARGETS.map((target) => (
+                    <th
+                      key={target}
+                      className="p-3 text-left border-b border-gray-200 text-gray-800 font-semibold capitalize"
+                    >
+                      {target}
                     </th>
                   ))}
-                  <th className="p-3 text-left border-b border-gray-200 bg-pink-500 text-white font-semibold">Total</th>
                 </tr>
               </thead>
               <tbody>
                 {forecasts.map((f, i) => (
                   <tr key={i} className="hover:bg-gray-100 last:border-b-0">
-                    <td className="p-3 text-left border-b border-gray-200">{f.year}</td>
-                    {TARGETS.map(target => (
-                      <td key={target} className="p-3 text-left border-b border-gray-200">
+                    <td className="p-3 text-left border-b border-gray-200">
+                      {f.year}
+                    </td>
+                    {TARGETS.map((target) => (
+                      <td
+                        key={target}
+                        className="p-3 text-left border-b border-gray-200"
+                      >
                         {f[target]?.toLocaleString() || 0}
                       </td>
                     ))}
-                    <td className="p-3 text-left border-b border-gray-200 font-semibold">
-                      {TARGETS.reduce((sum, t) => sum + (f[t] || 0), 0).toLocaleString()}
-                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -622,7 +1029,7 @@ export default function LSTMForecast({ data }: LSTMForecastProps) {
         </>
       )}
 
-      <div className="bg-indigo-50 border-l-4 border-indigo-500 p-6 rounded-md">
+      {/* <div className="bg-indigo-50 border-l-4 border-indigo-500 p-6 rounded-md">
         <h4 className="text-indigo-800 mb-4 text-lg">LSTM Model Configuration</h4>
         <ul className="list-none p-0 m-0">
           <li className="py-2 text-gray-800 border-b border-indigo-200">Architecture: 2 LSTM layers (60 units each)</li>
@@ -633,7 +1040,7 @@ export default function LSTMForecast({ data }: LSTMForecastProps) {
           <li className="py-2 text-gray-800 border-b border-indigo-200">Dropout: 0.3</li>
           <li className="py-2 text-gray-800 border-b-0">Epochs: 100 | Validation split: 20%</li>
         </ul>
-      </div>
+      </div> */}
     </div>
   );
 }

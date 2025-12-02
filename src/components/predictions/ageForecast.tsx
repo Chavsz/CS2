@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import LSTMForecast from '../../forecast_components/LSTMForecast'
 import { getAges, type AgeRecord } from '../../services/age'
-import '../../App.css'
 
 interface DataRow {
   year: number
@@ -89,92 +87,9 @@ function AgeForecast() {
     )
   }
 
-  const ageGroups = [
-    { key: 'age14Below', name: '14 and Below' },
-    { key: 'age15to19', name: '15–19' },
-    { key: 'age20to24', name: '20–24' },
-    { key: 'age25to29', name: '25–29' },
-    { key: 'age30to34', name: '30–34' },
-    { key: 'age35to39', name: '35–39' },
-    { key: 'age40to44', name: '40–44' },
-    { key: 'age45to49', name: '45–49' },
-    { key: 'age50to54', name: '50–54' },
-    { key: 'age55to59', name: '55–59' },
-    { key: 'age60to64', name: '60–64' },
-    { key: 'age65to69', name: '65–69' },
-    { key: 'age70Above', name: '70 and Above' }
-  ] as const
-
-  const colors = [
-    '#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4',
-    '#6366f1', '#f97316', '#14b8a6', '#64748b', '#22c55e', '#eab308'
-  ]
 
   return (
-    <div className="app py-4 px-8">
-      <h1 className="text-2xl font-bold text-indigo-600 mb-4">Emigrant Age Group Analysis & Forecasting</h1>
-
-      {/* Original Historical Data Graph */}
-      <section className="original-section">
-        <h2>Historical Data: Emigration by Age Group</h2>
-        {data.length > 0 ? (
-          <div className="chart-container">
-            <ResponsiveContainer width="100%" height={500}>
-              <LineChart
-                data={data}
-                margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis
-                  dataKey="year"
-                  label={{ value: 'Year', position: 'insideBottom', offset: -10 }}
-                />
-                <YAxis
-                  label={{ value: 'Emigrants', angle: -90, position: 'insideLeft' }}
-                />
-                <Tooltip />
-                <Legend />
-                {ageGroups.map((group, index) => (
-                  <Line
-                    key={group.key}
-                    type="monotone"
-                    dataKey={group.key}
-                    stroke={colors[index % colors.length]}
-                    strokeWidth={2}
-                    name={group.name}
-                    dot={{ r: 2.5 }}
-                    activeDot={{ r: 4 }}
-                  />
-                ))}
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        ) : (
-          <div className="chart-container bg-gray-100 p-8 rounded-lg text-center">
-            <p className="text-gray-600 text-lg">No data available to display</p>
-            <p className="text-gray-500 text-sm mt-2">Please check the browser console for details</p>
-          </div>
-        )}
-        <div className="info">
-          {data.length > 0 ? (
-            <>
-              <p>Data shows emigrant age distribution from {data[0]?.year} to {data[data.length - 1]?.year}</p>
-              <p>Total data points: {data.length}</p>
-              <p className="text-sm text-gray-600 mt-2">Note: Not Reported category is excluded from analysis</p>
-            </>
-          ) : (
-            <div className="text-red-600">
-              <p>⚠️ No data loaded. Please check:</p>
-              <ul className="list-disc list-inside mt-2">
-                <li>Firebase connection is working</li>
-                <li>Age data is uploaded to Firebase</li>
-                <li>Data contains valid year and age group fields</li>
-                <li>Check browser console for detailed error messages</li>
-              </ul>
-            </div>
-          )}
-        </div>
-      </section>
+    <div>
 
       {/* LSTM Forecasting Section */}
       <section className="forecast-section">

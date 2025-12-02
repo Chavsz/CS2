@@ -14,7 +14,7 @@ const TimeSeries = () => {
 
   return (
     <div className="py-4 px-8">
-      <h1 className="text-2xl font-bold text-indigo-600 mb-4">Time Series Forecasting</h1>
+      <h1 className="text-2xl font-bold text-indigo-600">Time Series Forecasting</h1>
 
       <div className="mt-4">
         {selected === 'Age' && <AgeForecast />}

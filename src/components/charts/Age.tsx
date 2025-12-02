@@ -151,7 +151,7 @@ const Age = () => {
                   dataKey={key}
                   name={ageGroupLabels[key]}
                   stroke={ageGroupColors[key]}
-                  strokeWidth={2}
+                  strokeWidth={1}
                   connectNulls
                 />
               ))}
@@ -161,7 +161,8 @@ const Age = () => {
                   dataKey="total"
                   name={ageGroupLabels.total}
                   stroke={ageGroupColors.total}
-                  strokeWidth={3}
+                  strokeWidth={2}
+                  connectNulls
                 />
               )}
             </LineChart>

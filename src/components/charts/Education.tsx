@@ -101,7 +101,7 @@ const Education = () => {
     <div className="w-full">
       <div className="bg-white border border-gray-300 rounded pt-3 px-3">
         <div className="mb-3">
-          <h2 className="text-xl font-semibold text-gray-600">
+          <h2 className="text-lg font-semibold text-gray-600">
             Education: Emigrants by Educational Attainment
           </h2>
         </div>
@@ -145,8 +145,7 @@ const Education = () => {
                   dataKey={key}
                   name={educationLabels[key]}
                   stroke={educationColors[key]}
-                  strokeWidth={2}
-                  dot={false}
+                  strokeWidth={1}
                   connectNulls
                 />
               ))}

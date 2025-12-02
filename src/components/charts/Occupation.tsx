@@ -1,8 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-  getOccupation,
-  type OccupationData,
-} from "../../services/occupation";
+import { getOccupation, type OccupationData } from "../../services/occupation";
 import {
   BarChart,
   Bar,
@@ -182,7 +179,13 @@ function Occupation() {
     { name: "Refugees", size: totals.refugees },
   ];
 
-  const employedPalette = ["#F2A65A", "#F6B26B", "#F9C784", "#F7A278", "#F4AD90"];
+  const employedPalette = [
+    "#F2A65A",
+    "#F6B26B",
+    "#F9C784",
+    "#F7A278",
+    "#F4AD90",
+  ];
   const unemployedPalette = [
     "#F6A5C0",
     "#F7B7CC",
@@ -202,7 +205,10 @@ function Occupation() {
         fill: palette[index % palette.length],
       }));
 
-  const employedTreemapData = mapTreemapData(employedCategories, employedPalette);
+  const employedTreemapData = mapTreemapData(
+    employedCategories,
+    employedPalette
+  );
   const unemployedTreemapData = mapTreemapData(
     unemployedCategories,
     unemployedPalette
@@ -311,12 +317,9 @@ function Occupation() {
 
       {/* Chart Title and Category Filters */}
       <div className="mb-5">
-        <h2 className="mb-3 text-lg font-bold">
-          Filipino Emigrants by Occupation
-        </h2>
-        <p className="mb-4 text-sm text-gray-600">
+        {/* <p className="mb-4 text-sm text-gray-600">
           Registered Filipino emigrants by major occupational group (1981-2020)
-        </p>
+        </p> */}
 
         {/* Category Filter Buttons */}
         <div className="flex gap-2 mb-4">
@@ -355,6 +358,9 @@ function Occupation() {
 
       {/* Histogram Chart */}
       <div className="mb-8 bg-white border border-gray-300 rounded p-5">
+        <h2 className="mb-3 text-lg font-semibold text-gray-600">
+          Filipino Emigrants by Occupation
+        </h2>
         <ResponsiveContainer width="100%" height={500}>
           <BarChart
             data={chartData}
