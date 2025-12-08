@@ -114,20 +114,21 @@ export async function predictLSTM(
   const xs = tf.tensor3d(X);
   const predictions = model.predict(xs);
   const predictionTensor = Array.isArray(predictions) ? predictions[0] : predictions;
-  const result = await predictionTensor.array();
+  const result = (await predictionTensor.array()) as number[][] | number[];
 
   xs.dispose();
   predictionTensor.dispose();
 
   // If output is 2D (multiple targets), return as-is
   // If output is 1D (single target), return flattened
-  if (Array.isArray(result[0]) && result[0].length > 1) {
+  if (Array.isArray(result[0])) {
     // Multiple targets: return 2D array
-    return result;
-  } else {
-    // Single target: return 1D array (backward compatibility)
-    return result.map(r => Array.isArray(r) ? r[0] : r);
+    return result as number[][];
   }
+
+  // Single target: return 1D array (backward compatibility)
+  const flatResult = result as number[];
+  return flatResult;
 }
 
 /**

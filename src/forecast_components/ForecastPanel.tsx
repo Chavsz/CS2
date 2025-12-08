@@ -431,7 +431,7 @@ export default function ForecastPanel({
       if (result) {
         setModel(result.model);
         setMetadata(result.metadata);
-        setMetrics(result.metadata.metrics);
+        setMetrics(result.metadata?.metrics || null);
         alert(`${modelType} model loaded successfully!`);
       } else {
         alert("No saved model found. Please train a model first.");

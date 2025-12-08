@@ -48,6 +48,8 @@ export default function LSTMForecast({ data }: LSTMForecastProps) {
   const [validationResults, setValidationResults] = useState<any[]>([]);
   const modelUploadInputRef = useRef<HTMLInputElement | null>(null);
 
+  validationResults // the value is never read.
+
   const LOOKBACK = 2;
 
   // Detect data type: check if data has age, education, place of origin, major countries, civil status, occupation, or sex fields

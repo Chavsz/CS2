@@ -76,21 +76,6 @@ function MajorCountriesForecast() {
     )
   }
 
-  // Color palette for 11 countries
-  const countryColors = [
-    '#3b82f6', // USA - Blue
-    '#ef4444', // Canada - Red
-    '#10b981', // Japan - Green
-    '#f59e0b', // Australia - Orange
-    '#8b5cf6', // Italy - Purple
-    '#ec4899', // New Zealand - Pink
-    '#06b6d4', // United Kingdom - Cyan
-    '#6366f1', // Germany - Indigo
-    '#f97316', // South Korea - Orange Red
-    '#14b8a6', // Spain - Teal
-    '#64748b'  // Others - Gray
-  ]
-
   return (
     <div>
 
