@@ -99,13 +99,21 @@ export function sortData(data: any[]): any[] {
 /**
  * Min-Max Normalization: scales values to [0, 1] range
  * normalized = (value - min) / (max - min)
+ * By default, all numeric columns except `year` are normalized so inputs
+ * and targets stay on the same scale.
  */
-export function normalizeData(data: any[], features: string[] = ['population', 'emigrants']) {
+export function normalizeData(data: any[], features?: string[]) {
+  // Auto-select all numeric keys (except year) when no feature list is provided.
+  const featureList =
+    (features && features.length > 0)
+      ? features
+      : Object.keys(data?.[0] ?? {}).filter(k => k !== 'year');
+
   const mins: Record<string, number> = {};
   const maxs: Record<string, number> = {};
 
   // Calculate min and max for each feature
-  features.forEach(feature => {
+  featureList.forEach(feature => {
     const values = data.map(row => row[feature]);
     mins[feature] = Math.min(...values);
     maxs[feature] = Math.max(...values);
@@ -114,14 +122,14 @@ export function normalizeData(data: any[], features: string[] = ['population', '
   // Normalize data
   const normalized = data.map((row: any) => {
     const normalizedRow: any = { ...row };
-    features.forEach((feature: string) => {
+    featureList.forEach((feature: string) => {
       const range = maxs[feature] - mins[feature];
       normalizedRow[feature] = range === 0 ? 0 : (row[feature] - mins[feature]) / range;
     });
     return normalizedRow;
   });
 
-  return { normalized, mins, maxs };
+  return { normalized, mins, maxs, features: featureList };
 }
 
 /**
@@ -165,6 +173,16 @@ export function createSequences(
 
   // Handle both single target (string) and multiple targets (array)
   const targetArray = Array.isArray(target) ? target : [target];
+
+  // Guard against missing features/targets to avoid NaNs in training.
+  const missingFeature = features.find(f => data.some(row => row[f] === undefined));
+  const missingTarget = targetArray.find(t => data.some(row => row[t] === undefined));
+  if (missingFeature || missingTarget) {
+    throw new Error(
+      `createSequences: missing values for feature '${missingFeature}' or target '${missingTarget}'. ` +
+      `Ensure data is normalized with the same feature/target set used here.`
+    );
+  }
 
   for (let i = lookback; i < data.length; i++) {
     // Get lookback window of features
@@ -213,7 +231,7 @@ export function calculateMetrics(actual: number[], predicted: number[]) {
   const r2 = 1 - (ssRes / ssTot);
 
   // Accuracy (100 - MAPE)
-  const accuracy = 100 - mape;
+  const accuracy = Math.max(0, 100 - mape);
 
   return {
     mae: mae.toFixed(2),

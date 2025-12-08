@@ -100,8 +100,8 @@ const PlaceOfOriginTable = () => {
           <MdIcons.MdDelete /> {deletingAll ? "Deleting…" : "Delete All"}
         </button>
       </div>
-      <div className="overflow-x-auto max-w-full">
-        <div className="rounded-lg border border-gray-300">
+      <div className="">
+        <div className="rounded-lg border border-gray-300 overflow-x-auto max-w-full">
           <table className="min-w-max border-collapse text-gray-600">
             <thead>
               <tr className="bg-slate-50">

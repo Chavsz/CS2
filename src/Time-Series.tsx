@@ -13,7 +13,7 @@ const TimeSeries = () => {
   const selected = (searchParams.get('dataset') || 'Sex') as DatasetKey
 
   return (
-    <div className="py-4 px-8">
+    <div className="py-4 px-8 w-full max-w-full overflow-x-hidden">
       <h1 className="text-2xl font-bold text-indigo-600">Time Series Forecasting</h1>
 
       <div className="mt-4">

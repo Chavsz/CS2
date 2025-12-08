@@ -608,9 +608,6 @@ export default function LSTMForecast({ data }: LSTMForecastProps) {
       }
 
       setForecasts(predictions);
-      alert(
-        `Generated ${forecastYears} year LSTM forecast for ${targetFields.length} target(s)!`
-      );
     } catch (error: any) {
       console.error("Forecasting error:", error);
       alert("Error generating forecast: " + error.message);
@@ -620,7 +617,7 @@ export default function LSTMForecast({ data }: LSTMForecastProps) {
   const chartData = [...data, ...forecasts];
 
   return (
-    <div>
+    <div className="w-full overflow-x-hidden">
       <div className="flex justify-between mb-4 bg-white border border-gray-300 rounded-md p-4">
         <div className="flex items-center gap-4">
           <button
@@ -693,34 +690,34 @@ export default function LSTMForecast({ data }: LSTMForecastProps) {
         </div>
       )} */}
 
-      {/* {metrics && !isTraining && (
+      {metrics && !isTraining && (
         <>
-          <div className="bg-green-50 border-l-4 border-green-500 p-6 mb-6 rounded-md">
-            <h3 className="text-green-700 mb-4 text-xl">LSTM Model Performance Metrics (Overall Average)</h3>
-            <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-5 mb-6">
-              <div className="flex flex-col p-4 bg-white rounded-md shadow-sm">
+          <div className="border border-gray-300 bg-white p-6 mb-4 rounded-md">
+            <h3 className="text-gray-600 mb-4 text-xl">LSTM Model Performance Metrics (Overall Average)</h3>
+            <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-5">
+              <div className="flex flex-col p-4 bg-white rounded-md border border-gray-300 hover:translate-y-[-4px] transition-transform duration-300">
                 <span className="text-sm text-gray-600 mb-2">MAE:</span>
                 <span className="text-2xl font-bold text-gray-800">{metrics.mae}</span>
               </div>
-              <div className="flex flex-col p-4 bg-white rounded-md shadow-sm">
+              <div className="flex flex-col p-4 bg-white rounded-md border border-gray-300 hover:translate-y-[-4px] transition-transform duration-300">
                 <span className="text-sm text-gray-600 mb-2">RMSE:</span>
                 <span className="text-2xl font-bold text-gray-800">{metrics.rmse}</span>
               </div>
-              <div className="flex flex-col p-4 bg-white rounded-md shadow-sm">
+              <div className="flex flex-col p-4 bg-white rounded-md border border-gray-300 hover:translate-y-[-4px] transition-transform duration-300">
                 <span className="text-sm text-gray-600 mb-2">MAPE:</span>
                 <span className="text-2xl font-bold text-gray-800">{metrics.mape}%</span>
               </div>
-              <div className="flex flex-col p-4 bg-white rounded-md shadow-sm">
+              <div className="flex flex-col p-4 bg-white rounded-md border border-gray-300 hover:translate-y-[-4px] transition-transform duration-300">
                 <span className="text-sm text-gray-600 mb-2">R²:</span>
                 <span className="text-2xl font-bold text-gray-800">{metrics.r2}</span>
               </div>
-              <div className="flex flex-col p-4 bg-white rounded-md shadow-sm">
+              <div className="flex flex-col p-4 bg-white rounded-md border border-gray-300 hover:translate-y-[-4px] transition-transform duration-300">
                 <span className="text-sm text-gray-600 mb-2">Accuracy:</span>
                 <span className="text-2xl font-bold text-gray-800">{metrics.accuracy}%</span>
               </div>
             </div>
-            {TARGETS.length > 0 && TARGETS.some(t => metrics[t]) && (
-              <div className={`grid gap-4 ${TARGETS.length <= 2 ? 'sm:grid-cols-2' : 'sm:grid-cols-2 md:grid-cols-3'}`}>
+            {/* {TARGETS.length > 0 && TARGETS.some(t => metrics[t]) && (
+              <div className={`mt-4 grid gap-4 ${TARGETS.length <= 2 ? 'sm:grid-cols-2' : 'sm:grid-cols-2 md:grid-cols-3'}`}>
                 {TARGETS.map((target, idx) => {
                   const targetMetrics = metrics[target];
                   if (!targetMetrics) return null;
@@ -746,10 +743,10 @@ export default function LSTMForecast({ data }: LSTMForecastProps) {
                   );
                 })}
               </div>
-            )}
+            )} */}
           </div>
 
-          {validationResults.length > 0 && (
+          {/* {validationResults.length > 0 && (
             <div className="bg-teal-50 border-l-4 border-teal-500 p-6 mb-6 rounded-md">
               <h3 className="text-teal-700 mb-4 text-xl">Testing Results - 20% Split (Actual vs Predicted)</h3>
               <div className="max-h-96 overflow-y-auto rounded-md">
@@ -796,9 +793,9 @@ export default function LSTMForecast({ data }: LSTMForecastProps) {
                 </table>
               </div>
             </div>
-          )}
+          )} */}
         </>
-      )} */}
+      )}
 
       {model && !isTraining && (
         <div className="border border-gray-300 p-4 rounded-md bg-white">
@@ -831,151 +828,157 @@ export default function LSTMForecast({ data }: LSTMForecastProps) {
             <h3 className="text-gray-800 mb-4 text-xl">
               LSTM: Historical + Forecast
             </h3>
-            <ResponsiveContainer width="100%" height={400}>
-              <LineChart
-                data={chartData}
-                margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="year" />
-                <YAxis
-                  label={{
-                    value: "Emigrants",
-                    angle: -90,
-                    position: "insideLeft",
-                  }}
-                />
-                <Tooltip
-                  content={({ active, payload }) => {
-                    if (!active || !payload || !payload.length) return null;
-                    
-                    // Find forecast data point (check if any payload has isForecast)
-                    const forecastEntry = payload.find(
-                      (entry: any) => entry.payload?.isForecast
-                    );
-                    
-                    // Only show tooltip if hovering over forecast data
-                    if (!forecastEntry) return null;
-                    
-                    const data = forecastEntry.payload;
-                    
-                    return (
-                      <div className="bg-white border border-gray-300 rounded-md shadow-lg p-3">
-                        <p className="font-semibold text-gray-800 mb-2">
-                          {data.year} (Forecast)
-                        </p>
-                        {TARGETS.map((target, idx) => {
-                          const color = [
-                            "#3b82f6",
-                            "#ec4899",
-                            "#10b981",
-                            "#f59e0b",
-                            "#8b5cf6",
-                          ][idx % 5];
-                          return (
-                            <p
-                              key={target}
-                              style={{ color }}
-                              className="text-sm mb-1"
-                            >
-                              {`${target.charAt(0).toUpperCase() + target.slice(1)}: ${data[target]?.toLocaleString() || 0}`}
+            <div className="w-full overflow-x-auto">
+              <div className="w-full">
+                <ResponsiveContainer width="100%" height={400}>
+                  <LineChart
+                    data={chartData}
+                    margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="year" />
+                    <YAxis
+                      label={{
+                        value: "Emigrants",
+                        angle: -90,
+                        position: "insideLeft",
+                      }}
+                    />
+                    <Tooltip
+                      content={({ active, payload }) => {
+                        if (!active || !payload || !payload.length) return null;
+                        
+                        // Find forecast data point (check if any payload has isForecast)
+                        const forecastEntry = payload.find(
+                          (entry: any) => entry.payload?.isForecast
+                        );
+                        
+                        // Only show tooltip if hovering over forecast data
+                        if (!forecastEntry) return null;
+                        
+                        const data = forecastEntry.payload;
+                        
+                        return (
+                          <div className="bg-white border border-gray-300 rounded-md shadow-lg p-3">
+                            <p className="font-semibold text-gray-800 mb-2">
+                              {data.year} (Forecast)
                             </p>
-                          );
-                        })}
-                      </div>
-                    );
-                  }}
-                />
-                <Legend />
-                {TARGETS.map((target, idx) => {
-                  const colors = [
-                    "#3b82f6",
-                    "#ec4899",
-                    "#10b981",
-                    "#f59e0b",
-                    "#8b5cf6",
-                  ];
-                  const color = colors[idx % colors.length];
-                  return (
-                    <React.Fragment key={target}>
-                      <Line
-                        type="monotone"
-                        dataKey={(entry) =>
-                          !entry.isForecast ? entry[target] : null
-                        }
-                        stroke={color}
-                        strokeWidth={1}
-                        name={`${
-                          target.charAt(0).toUpperCase() + target.slice(1)
-                        } (Historical)`}
-                        dot={{ r: 3 }}
-                        activeDot={{ r: 5 }}
-                        connectNulls={false}
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey={(entry) =>
-                          entry.isForecast ? entry[target] : null
-                        }
-                        stroke={color}
-                        strokeWidth={1}
-                        strokeDasharray="5 5"
-                        name={`${
-                          target.charAt(0).toUpperCase() + target.slice(1)
-                        } (Forecast)`}
-                        dot={(props: any) => {
-                          const { cx, cy, payload } = props;
-                          if (!payload.isForecast || !payload[target])
-                            return <></>;
-                          return <circle cx={cx} cy={cy} r={4} fill={color} />;
-                        }}
-                        connectNulls={false}
-                      />
-                    </React.Fragment>
-                  );
-                })}
-              </LineChart>
-            </ResponsiveContainer>
+                            {TARGETS.map((target, idx) => {
+                              const color = [
+                                "#3b82f6",
+                                "#ec4899",
+                                "#10b981",
+                                "#f59e0b",
+                                "#8b5cf6",
+                              ][idx % 5];
+                              return (
+                                <p
+                                  key={target}
+                                  style={{ color }}
+                                  className="text-sm mb-1"
+                                >
+                                  {`${target.charAt(0).toUpperCase() + target.slice(1)}: ${data[target]?.toLocaleString() || 0}`}
+                                </p>
+                              );
+                            })}
+                          </div>
+                        );
+                      }}
+                    />
+                    <Legend />
+                    {TARGETS.map((target, idx) => {
+                      const colors = [
+                        "#3b82f6",
+                        "#ec4899",
+                        "#10b981",
+                        "#f59e0b",
+                        "#8b5cf6",
+                      ];
+                      const color = colors[idx % colors.length];
+                      return (
+                        <React.Fragment key={target}>
+                          <Line
+                            type="monotone"
+                            dataKey={(entry) =>
+                              !entry.isForecast ? entry[target] : null
+                            }
+                            stroke={color}
+                            strokeWidth={1}
+                            name={`${
+                              target.charAt(0).toUpperCase() + target.slice(1)
+                            } (Historical)`}
+                            dot={{ r: 3 }}
+                            activeDot={{ r: 5 }}
+                            connectNulls={false}
+                          />
+                          <Line
+                            type="monotone"
+                            dataKey={(entry) =>
+                              entry.isForecast ? entry[target] : null
+                            }
+                            stroke={color}
+                            strokeWidth={1}
+                            strokeDasharray="5 5"
+                            name={`${
+                              target.charAt(0).toUpperCase() + target.slice(1)
+                            } (Forecast)`}
+                            dot={(props: any) => {
+                              const { cx, cy, payload } = props;
+                              if (!payload.isForecast || !payload[target])
+                                return <></>;
+                              return <circle cx={cx} cy={cy} r={4} fill={color} />;
+                            }}
+                            connectNulls={false}
+                          />
+                        </React.Fragment>
+                      );
+                    })}
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
           </div>
 
           <div className="border border-gray-300 p-4 rounded-md bg-white">
             <h3 className="text-gray-600 mb-4 text-xl font-semibold">
               LSTM Forecast Results
             </h3>
-            <table className="w-full border-collapse rounded-md overflow-hidden">
-              <thead>
-                <tr>
-                  <th className="p-3 text-left border-b border-gray-200 text-gray-800 font-semibold">
-                    Year
-                  </th>
-                  {TARGETS.map((target) => (
-                    <th
-                      key={target}
-                      className="p-3 text-left border-b border-gray-200 text-gray-800 font-semibold capitalize"
-                    >
-                      {target}
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse rounded-md overflow-hidden">
+                <thead>
+                  <tr>
+                    <th className="p-3 text-left border-b border-gray-200 text-gray-800 font-semibold">
+                      Year
                     </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {forecasts.map((f, i) => (
-                  <tr key={i} className="hover:bg-gray-100 last:border-b-0">
-                    <td className="p-3 text-left border-b border-gray-200">
-                      {f.year}
-                    </td>
                     {TARGETS.map((target) => (
-                      <td
+                      <th
                         key={target}
-                        className="p-3 text-left border-b border-gray-200"
+                        className="p-3 text-left border-b border-gray-200 text-gray-800 font-semibold capitalize"
                       >
-                        {f[target]?.toLocaleString() || 0}
-                      </td>
+                        {target}
+                      </th>
                     ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {forecasts.map((f, i) => (
+                    <tr key={i} className="hover:bg-gray-100 last:border-b-0">
+                      <td className="p-3 text-left border-b border-gray-200">
+                        {f.year}
+                      </td>
+                      {TARGETS.map((target) => (
+                        <td
+                          key={target}
+                          className="p-3 text-left border-b border-gray-200"
+                        >
+                          {f[target]?.toLocaleString() || 0}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </>
       )}

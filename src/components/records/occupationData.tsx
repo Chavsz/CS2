@@ -101,8 +101,8 @@ const OccupationTable = () => {
         </button>
       </div>
       <div className="">
-        <div className="rounded-lg border border-gray-300 overflow-hidden">
-          <table className="w-full border-collapse text-gray-600">
+        <div className="rounded-lg border border-gray-300 overflow-x-auto max-w-full">
+          <table className="min-w-max border-collapse text-gray-600">
             <thead>
               <tr className="bg-slate-50">
                 <th className="p-3 text-left">Year</th>

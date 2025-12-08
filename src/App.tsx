@@ -20,7 +20,7 @@ const App = () => {
   return (
     <div className={containerClass}>
       {userLoggedIn && <Sidebar />}
-      <div>
+      <div className="min-w-0 w-full">
         <Routes>
           <Route path="/" element={userLoggedIn ? (
             <>
