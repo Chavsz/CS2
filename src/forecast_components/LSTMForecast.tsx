@@ -1,5 +1,6 @@
-import { useState, useRef } from "react";
+import { useRef, useState } from "react";
 import React from "react";
+import * as tf from "@tensorflow/tfjs";
 import {
   LineChart,
   Line,
@@ -23,7 +24,6 @@ import {
   trainLSTMModel,
   predictLSTM,
   saveLSTMModel,
-  loadLSTMModel,
   deleteLSTMModel,
   downloadLSTMModel,
 } from "../models/lstmModel";
@@ -46,7 +46,7 @@ export default function LSTMForecast({ data }: LSTMForecastProps) {
   const [forecastYears, setForecastYears] = useState(5);
   const [forecasts, setForecasts] = useState<any[]>([]);
   const [validationResults, setValidationResults] = useState<any[]>([]);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const modelUploadInputRef = useRef<HTMLInputElement | null>(null);
 
   const LOOKBACK = 2;
 
@@ -455,97 +455,56 @@ export default function LSTMForecast({ data }: LSTMForecastProps) {
     }
   };
 
-  const handleLoadModel = async () => {
-    try {
-      const result = await loadLSTMModel();
-      if (result) {
-        setModel(result.model);
-        setMetadata(result.metadata);
-        setMetrics(result.metadata.metrics);
-        alert("LSTM model loaded successfully!");
-      } else {
-        alert("No saved model found. Please train a model first.");
-      }
-    } catch (error: any) {
-      console.error("Error loading model:", error);
-      alert("Error loading model: " + error.message);
-    }
+  const handleUploadModelClick = () => {
+    if (isTraining) return;
+    modelUploadInputRef.current?.click();
   };
 
-  const handleUploadModel = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (!files || files.length === 0) return;
+  const handleUploadModel = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const files = event.target.files ? Array.from(event.target.files) : [];
+    if (!files.length) return;
 
     try {
-      // Find model.json and metadata.json files
-      let modelJsonFile: File | null = null;
-      let metadataFile: File | null = null;
-      const modelFiles: File[] = [];
+      const metadataFile = files.find((file) =>
+        file.name.toLowerCase().includes("metadata")
+      );
+      const modelFiles = files.filter((file) => file !== metadataFile);
 
-      // Separate model files from metadata file
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        if (file.name === 'lstm-metadata.json' || file.name === 'metadata.json') {
-          metadataFile = file;
-        } else {
-          // All other files are part of the model (model.json and weight files)
-          modelFiles.push(file);
-          if (file.name === 'model.json' || (file.name.endsWith('.json') && !file.name.includes('metadata'))) {
-            modelJsonFile = file;
-          }
-        }
-      }
-
-      if (modelFiles.length === 0) {
-        alert("Please select model files (model.json and weight files).");
+      if (!modelFiles.some((file) => file.name.endsWith(".json"))) {
+        alert("Select the exported model.json and weight files.");
         return;
       }
 
-      if (!modelJsonFile) {
-        alert("Please select a model.json file.");
-        return;
-      }
+      const uploadedModel = await tf.loadLayersModel(
+        tf.io.browserFiles(modelFiles)
+      );
 
-      // Load the model using TensorFlow.js
-      // browserFiles expects: first file is model.json, rest are weight files
-      const sortedFiles = [modelJsonFile, ...modelFiles.filter(f => f !== modelJsonFile)];
-      const tf = await import('@tensorflow/tfjs');
-      const uploadedModel = await tf.loadLayersModel(tf.io.browserFiles(sortedFiles));
-
-      // Load metadata if provided
       let uploadedMetadata: any = null;
       if (metadataFile) {
-        const metadataText = await metadataFile.text();
-        uploadedMetadata = JSON.parse(metadataText);
-      } else {
-        alert("Warning: No metadata file found. Model loaded but some features may not work without metadata.");
+        const text = await metadataFile.text();
+        uploadedMetadata = JSON.parse(text);
       }
 
-      // Set the model and metadata
       setModel(uploadedModel);
       if (uploadedMetadata) {
         setMetadata(uploadedMetadata);
         setMetrics(uploadedMetadata.metrics || null);
       }
 
-      // Save to IndexedDB for future use
-      if (uploadedMetadata) {
-        await saveLSTMModel(uploadedModel, uploadedMetadata);
-      }
-
-      alert("LSTM model uploaded successfully!");
-      
-      // Reset file input
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
+      alert(
+        `LSTM model uploaded successfully!${
+          uploadedMetadata ? "" : " (metadata file not provided)"
+        }`
+      );
     } catch (error: any) {
       console.error("Error uploading model:", error);
-      alert("Error uploading model: " + error.message + "\n\nPlease make sure you select:\n1. model.json file\n2. All weight files (.bin)\n3. lstm-metadata.json (optional but recommended)\n\nNote: Select all files at once using Ctrl+Click or Cmd+Click.");
+      alert("Error uploading model: " + error.message);
+    } finally {
+      if (event.target) {
+        event.target.value = "";
+      }
     }
   };
 
@@ -674,24 +633,16 @@ export default function LSTMForecast({ data }: LSTMForecastProps) {
         </div>
 
         <div className="flex items-center gap-2">
-          <button
-            onClick={handleLoadModel}
-            disabled={isTraining}
-            className="flex gap-2 items-center px-4 py-2 bg-white text-gray-600 border border-gray-300 rounded-md text-base font-medium cursor-pointer transition-colors duration-300  disabled:bg-gray-300 disabled:cursor-not-allowed"
-          >
-            <FiUpload  />
-            Load Model
-          </button>
           <input
+            ref={modelUploadInputRef}
             type="file"
-            ref={fileInputRef}
-            onChange={handleFileChange}
             multiple
             accept=".json,.bin"
-            style={{ display: 'none' }}
+            onChange={handleUploadModel}
+            className="hidden"
           />
           <button
-            onClick={handleUploadModel}
+            onClick={handleUploadModelClick}
             disabled={isTraining}
             className="flex gap-2 items-center px-4 py-2 bg-white text-gray-600 border border-gray-300 rounded-md text-base font-medium cursor-pointer transition-colors duration-300  disabled:bg-gray-300 disabled:cursor-not-allowed"
           >
