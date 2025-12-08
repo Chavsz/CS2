@@ -91,20 +91,6 @@ function MajorCountriesForecast() {
     '#64748b'  // Others - Gray
   ]
 
-  const countries = [
-    { key: 'Usa', name: 'USA', color: countryColors[0] },
-    { key: 'Canada', name: 'Canada', color: countryColors[1] },
-    { key: 'Japan', name: 'Japan', color: countryColors[2] },
-    { key: 'Australia', name: 'Australia', color: countryColors[3] },
-    { key: 'Italy', name: 'Italy', color: countryColors[4] },
-    { key: 'NewZealand', name: 'New Zealand', color: countryColors[5] },
-    { key: 'UnitedKingdom', name: 'United Kingdom', color: countryColors[6] },
-    { key: 'Germany', name: 'Germany', color: countryColors[7] },
-    { key: 'SouthKorea', name: 'South Korea', color: countryColors[8] },
-    { key: 'Spain', name: 'Spain', color: countryColors[9] },
-    { key: 'Others', name: 'Others', color: countryColors[10] }
-  ]
-
   return (
     <div>
 

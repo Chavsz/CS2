@@ -225,7 +225,6 @@ function Occupation() {
     width,
     height,
     payload,
-    value,
     name,
   }: TreemapContentProps) => {
     if (depth === 1) {

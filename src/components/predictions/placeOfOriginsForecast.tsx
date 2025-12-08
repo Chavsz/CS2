@@ -99,32 +99,6 @@ function PlaceOfOriginsForecast() {
     )
   }
 
-  const regions = [
-    { key: 'regionI', name: 'Region I - Ilocos' },
-    { key: 'regionII', name: 'Region II - Cagayan Valley' },
-    { key: 'regionIII', name: 'Region III - Central Luzon' },
-    { key: 'regionIVA', name: 'Region IV-A - CALABARZON' },
-    { key: 'regionIVB', name: 'Region IV-B - MIMAROPA' },
-    { key: 'regionV', name: 'Region V - Bicol' },
-    { key: 'regionVI', name: 'Region VI - Western Visayas' },
-    { key: 'regionVII', name: 'Region VII - Central Visayas' },
-    { key: 'regionVIII', name: 'Region VIII - Eastern Visayas' },
-    { key: 'regionIX', name: 'Region IX - Zamboanga Peninsula' },
-    { key: 'regionX', name: 'Region X - Northern Mindanao' },
-    { key: 'regionXI', name: 'Region XI - Davao' },
-    { key: 'regionXII', name: 'Region XII - SOCCSKSARGEN' },
-    { key: 'regionXIII', name: 'Region XIII - Caraga' },
-    { key: 'armm', name: 'ARMM' },
-    { key: 'car', name: 'CAR' },
-    { key: 'ncr', name: 'NCR' }
-  ] as const
-
-  const regionColors = [
-    '#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4',
-    '#6366f1', '#f97316', '#14b8a6', '#64748b', '#22c55e', '#eab308', '#0ea5e9',
-    '#a855f7', '#f97316', '#059669'
-  ]
-
   return (
     <div>
       {/* LSTM Forecasting Section */}

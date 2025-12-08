@@ -665,8 +665,8 @@ export default function LSTMForecast({ data }: LSTMForecastProps) {
         </div>
       </div>
 
-      {/* {isTraining && trainingProgress && (
-        <div className="bg-blue-50 border-l-4 border-blue-500 p-6 mb-6 rounded-md">
+      {isTraining && trainingProgress && (
+        <div className="bg-blue-50 border-l-4 border-blue-500 p-6 mb-6 rounded-md hidden">
           <h3 className="text-blue-700 mb-4 text-xl">Training Progress</h3>
           <p className="my-2 text-gray-800 font-mono">
             Epoch: {trainingProgress.epoch} / 100
@@ -688,7 +688,7 @@ export default function LSTMForecast({ data }: LSTMForecastProps) {
             </>
           )}
         </div>
-      )} */}
+      )}
 
       {metrics && !isTraining && (
         <>
